@@ -152,13 +152,6 @@ spec:
 EOF
 ```
 
-###### View Analysis Results
-
-```bash
-# Check the results after a few minutes
-kubectl get results -o json -n k8sgpt-operator-system | jq
-```
-
 ### Part 2: Basic K8sGPT Operations
 
 #### Deploy Sample Workloads
