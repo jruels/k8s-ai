@@ -75,19 +75,14 @@ helm version
 
 ##### Install K8sGPT CLI
 
-Download the latest release (adjust version as needed):
+Download the latest release:
 ```bash
-curl -LO https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.3.41/k8sgpt_amd64_linux
+curl -LO https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.3.48/k8sgpt_amd64.deb
 ```
 
-Make it executable:
+Install the package:
 ```bash
-chmod +x k8sgpt_amd64_linux
-```
-
-Move to your PATH:
-```bash
-sudo mv k8sgpt_amd64_linux /usr/local/bin/k8sgpt
+sudo dpkg -i k8sgpt_amd64.deb
 ```
 
 Verify installation:
