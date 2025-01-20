@@ -74,23 +74,34 @@ helm version
 #### Install K8sGPT (Both Methods)
 
 ##### Install K8sGPT CLI
+
+Download the latest release (adjust version as needed):
 ```bash
-# Download the latest release (adjust version as needed)
 curl -LO https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.3.41/k8sgpt_amd64_linux
+```
 
-# Make it executable
+Make it executable:
+```bash
 chmod +x k8sgpt_amd64_linux
+```
 
-# Move to your PATH
+Move to your PATH:
+```bash
 sudo mv k8sgpt_amd64_linux /usr/local/bin/k8sgpt
+```
 
-# Verify installation
+Verify installation:
+```bash
 k8sgpt version
+```
 
-# Configure OpenAI backend for CLI
+Configure OpenAI backend for CLI:
+```bash
 k8sgpt auth add --backend openai --password <your-api-key> --model gpt-3.5-turbo
+```
 
-# Verify configuration
+Verify configuration:
+```bash
 k8sgpt auth list
 ```
 
