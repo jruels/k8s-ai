@@ -107,12 +107,18 @@ k8sgpt auth list
 
 ###### Install K8sGPT Operator
 
+Add the K8sGPT Helm repository:
 ```bash
-# Add the K8sGPT Helm repository
 helm repo add k8sgpt https://charts.k8sgpt.ai/
-helm repo update
+```
 
-# Install the operator
+Update Helm repositories:
+```bash
+helm repo update
+```
+
+Install the operator:
+```bash
 helm install release k8sgpt/k8sgpt-operator -n k8sgpt-operator-system --create-namespace
 ```
 
