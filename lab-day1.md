@@ -118,21 +118,19 @@ helm install release k8sgpt/k8sgpt-operator -n k8sgpt-operator-system --create-n
 
 ###### Configure OpenAI Backend
 
-First, set your OpenAI API key as an environment variable:
+Set your OpenAI API key:
 ```bash
-# Replace YOUR_API_KEY with your actual OpenAI API key
 export OPENAI_TOKEN=YOUR_API_KEY
 ```
 
-Then create the Kubernetes secret:
+Create the Kubernetes secret:
 ```bash
-# Create a secret with your OpenAI API key
 kubectl create secret generic k8sgpt-sample-secret \
     --from-literal=openai-api-key=$OPENAI_TOKEN \
     -n k8sgpt-operator-system
 ```
 
-Now deploy the K8sGPT resource:
+Deploy the K8sGPT resource:
 ```bash
 kubectl apply -f - << EOF
 apiVersion: core.k8sgpt.ai/v1alpha1
@@ -164,10 +162,8 @@ kubectl get results -o json -n k8sgpt-operator-system | jq
 
 #### Deploy Sample Workloads
 
-Before we start analyzing with K8sGPT, let's deploy some sample workloads with common issues:
-
+Deploy a pod with resource constraints:
 ```bash
-# Deploy a pod with resource constraints
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
@@ -179,13 +175,17 @@ spec:
     image: nginx
     resources:
       requests:
-        memory: "1000Gi"  # Intentionally requesting too much memory
+        memory: "1000Gi"
 EOF
+```
 
-# Deploy a pod with an invalid image
+Deploy a pod with an invalid image:
+```bash
 kubectl create deployment bad-image --image=nginx:nonexistent
+```
 
-# Deploy a service without matching pods
+Deploy a service without matching pods:
+```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Service
@@ -201,17 +201,18 @@ EOF
 
 #### Initial Cluster Analysis
 
-Now that we have some issues to find, let's use K8sGPT to analyze them:
-
-##### **Perform Basic Cluster Check**
+Run initial analysis:
 ```bash
-# Run initial analysis
 k8sgpt analyze
+```
 
-# Save results to file and analyze them
+Save results to file:
+```bash
 k8sgpt analyze --output json > initial-analysis.json
+```
 
-# View the structured output
+View the structured output:
+```bash
 cat initial-analysis.json | jq
 ```
 
@@ -274,32 +275,33 @@ The JSON output (`--output json`) provides more structured data:
 
 Let's analyze this output:
 ```bash
-# Count issues by resource kind
 cat initial-analysis.json | jq '.results | group_by(.kind) | map({kind: .[0].kind, count: length})'
+```
 
-# List all error messages
+List all error messages:
+```bash
 cat initial-analysis.json | jq -r '.results[].error[].Text'
+```
 
-# Show only high-priority issues (pods with errors)
+Show only high-priority issues:
+```bash
 cat initial-analysis.json | jq -r '.results[] | select(.kind=="Pod")'
 ```
 
 #### Filtering and Customization
 
-Now let's learn how to focus on specific issues:
-
-##### **Namespace Filtering**
+Analyze default namespace:
 ```bash
-# Analyze only our test deployments in default namespace
 k8sgpt analyze --namespace default
 ```
 
-##### **Resource Filtering**
+Look only at pod issues:
 ```bash
-# Look only at pod issues
 k8sgpt analyze --filter Pod
+```
 
-# Check only service issues
+Check only service issues:
+```bash
 k8sgpt analyze --filter Service
 ```
 
@@ -373,20 +375,27 @@ Using the CLI (on-demand analysis):
 ```bash
 # Analyze scheduling issues
 k8sgpt analyze --filter Pod --explain
+```
 
-# Check node capacity issues
+Check node capacity issues:
+```bash
 k8sgpt analyze --filter Node
 ```
 
 Using the Operator (continuous monitoring):
+
+View all analysis results:
 ```bash
-# View all analysis results
 kubectl get results -n k8sgpt-operator-system
+```
 
-# View detailed results in JSON format
+View detailed results in JSON format:
+```bash
 kubectl get results -o json -n k8sgpt-operator-system | jq
+```
 
-# View specific result details
+View specific result details:
+```bash
 kubectl describe result defaultmissingbackend -n k8sgpt-operator-system
 ```
 
@@ -459,23 +468,31 @@ EOF
 ```
 
 ##### **Manual Investigation**
+
+Check pod status:
 ```bash
-# Check pod status
 kubectl get pod resource-test-pod
+```
 
-# Check node resources
+Check node resources:
+```bash
 kubectl describe nodes
+```
 
-# View scheduling events
+View scheduling events:
+```bash
 kubectl describe pod resource-test-pod
 ```
 
 ##### **K8sGPT Analysis**
-```bash
-# Analyze scheduling issues
-k8sgpt analyze --filter Pod --explain
 
-# Check node capacity issues
+Analyze scheduling issues:
+```bash
+k8sgpt analyze --filter Pod --explain
+```
+
+Check node capacity issues:
+```bash
 k8sgpt analyze --filter Node
 ```
 
@@ -521,30 +538,42 @@ This is much more user-friendly than parsing through logs and events manually, e
 K8sGPT can integrate with Trivy to provide vulnerability and configuration scanning.
 
 #### Enable Trivy Integration
-```bash
-# Check available integrations
-k8sgpt integrations list
 
-# Activate Trivy
+Check available integrations:
+```bash
+k8sgpt integrations list
+```
+
+Activate Trivy:
+```bash
 k8sgpt integration activate trivy
 ```
 
 #### Security Analysis
 
 After activating Trivy integration:
+
+Check Trivy operator deployment status:
 ```bash
-# Check Trivy operator deployment status
 helm list
+```
+
+Example output:
+```
 NAME                 	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                	APP VERSION
 trivy-operator-k8sgpt	default  	1       	2025-01-20 20:36:02.236249031 +0000 UTC	deployed	trivy-operator-0.25.0	0.23.0
+```
 
-# Once the operator is running, wait a few minutes for initial scans to complete
-# Then check for vulnerabilities and misconfigurations:
+Once the operator is running, wait a few minutes for initial scans to complete.
+Then check for vulnerabilities and misconfigurations:
 
-# Check for vulnerabilities
+Check for vulnerabilities:
+```bash
 k8sgpt analyze --filter VulnerabilityReport
+```
 
-# Check for security misconfigurations
+Check for security misconfigurations:
+```bash
 k8sgpt analyze --filter ConfigAuditReport
 ```
 
