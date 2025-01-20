@@ -21,6 +21,11 @@
   - Custom filtering and rules
   - Real-time monitoring capabilities
 
+K8sGPT can be used in two ways:
+1. **CLI Tool**: For interactive troubleshooting and on-demand analysis
+2. **Operator**: For continuous monitoring and automated analysis
+
+
 ##### **Tools and Technologies Required**
 - **Kubernetes Cluster**: A running Kubernetes cluster (e.g., AKS, minikube, or kind)
 - **kubectl**: Command-line tool for Kubernetes
@@ -35,17 +40,8 @@
 
 ###### Install jq
 ```bash
-# For macOS users
-brew install jq
-
 # For Linux users (Debian/Ubuntu)
 sudo apt-get update && sudo apt-get install -y jq
-
-# For Linux users (RHEL/CentOS)
-sudo yum install -y jq
-
-# For Windows users (using Chocolatey)
-choco install jq
 ```
 
 ###### Verify jq Installation
@@ -53,35 +49,97 @@ choco install jq
 jq --version
 ```
 
-##### **Install K8sGPT**
+##### **Install Helm**
 ```bash
-# For macOS users
-brew install k8sgpt
+# Download the installation script
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 
-# For Linux users
-curl -LO https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.3.8/k8sgpt_amd64
-chmod +x k8sgpt_amd64
-sudo mv k8sgpt_amd64 /usr/local/bin/k8sgpt
+# Make the script executable
+chmod 700 get_helm.sh
 
-# For Windows users (PowerShell)
-curl.exe -LO https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.3.8/k8sgpt_windows_amd64.exe
-Move-Item .\k8sgpt_windows_amd64.exe k8sgpt.exe
+# Run the installation script
+./get_helm.sh
+
+# Verify the installation
+helm version
 ```
 
-##### **Verify Installation**
+#### Install K8sGPT (Both Methods)
+
+##### Install K8sGPT CLI
 ```bash
+# Download the latest release (adjust version as needed)
+curl -LO https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.3.41/k8sgpt_amd64_linux
+
+# Make it executable
+chmod +x k8sgpt_amd64_linux
+
+# Move to your PATH
+sudo mv k8sgpt_amd64_linux /usr/local/bin/k8sgpt
+
+# Verify installation
 k8sgpt version
-```
 
-##### **Configure AI Backend**
-
-###### OpenAI Backend
-```bash
-# Set OpenAI as the backend
+# Configure OpenAI backend for CLI
 k8sgpt auth add --backend openai --password <your-api-key> --model gpt-3.5-turbo
 
 # Verify configuration
 k8sgpt auth list
+```
+
+###### Install K8sGPT Operator
+
+```bash
+# Add the K8sGPT Helm repository
+helm repo add k8sgpt https://charts.k8sgpt.ai/
+helm repo update
+
+# Install the operator
+helm install release k8sgpt/k8sgpt-operator -n k8sgpt-operator-system --create-namespace
+```
+
+###### Configure OpenAI Backend
+
+First, set your OpenAI API key as an environment variable:
+```bash
+# Replace YOUR_API_KEY with your actual OpenAI API key
+export OPENAI_TOKEN=YOUR_API_KEY
+```
+
+Then create the Kubernetes secret:
+```bash
+# Create a secret with your OpenAI API key
+kubectl create secret generic k8sgpt-sample-secret \
+    --from-literal=openai-api-key=$OPENAI_TOKEN \
+    -n k8sgpt-operator-system
+```
+
+Now deploy the K8sGPT resource:
+```bash
+kubectl apply -f - << EOF
+apiVersion: core.k8sgpt.ai/v1alpha1
+kind: K8sGPT
+metadata:
+  name: k8sgpt-sample
+  namespace: k8sgpt-operator-system
+spec:
+  ai:
+    enabled: true
+    model: gpt-4o-mini
+    backend: openai
+    secret:
+      name: k8sgpt-sample-secret
+      key: openai-api-key
+  noCache: false
+  version: v0.3.41
+EOF
+```
+
+###### View Analysis Results
+
+```bash
+# Check the results after a few minutes
+kubectl get results -o json -n k8sgpt-operator-system | jq
 ```
 
 ### Part 2: Basic K8sGPT Operations
@@ -144,18 +202,6 @@ The JSON output allows us to:
 - Integrate with other tools and workflows
 - Create custom reports and dashboards
 - Track issues over time by comparing analysis results
-
-For example, you could create a simple script to monitor trends:
-```bash
-#!/bin/bash
-# Save hourly analyses
-mkdir -p k8sgpt-history
-while true; do
-    timestamp=$(date +%Y%m%d_%H%M%S)
-    k8sgpt analyze --output json > k8sgpt-history/analysis_$timestamp.json
-    sleep 3600
-done
-```
 
 You should see K8sGPT detect multiple issues:
 - The pod that can't be scheduled due to resource constraints
@@ -304,13 +350,75 @@ From this manual investigation, we can determine:
 In the next section, we'll see how K8sGPT can automate this analysis and provide remediation steps.
 
 ##### **K8sGPT Analysis**
-```bash
-# Quick analysis
-k8sgpt analyze --filter Pod
 
-# Detailed analysis
+Using the CLI (on-demand analysis):
+```bash
+# Analyze scheduling issues
 k8sgpt analyze --filter Pod --explain
+
+# Check node capacity issues
+k8sgpt analyze --filter Node
 ```
+
+Using the Operator (continuous monitoring):
+```bash
+# View all analysis results
+kubectl get results -n k8sgpt-operator-system
+
+# View detailed results in JSON format
+kubectl get results -o json -n k8sgpt-operator-system | jq
+
+# View specific result details
+kubectl describe result defaultmissingbackend -n k8sgpt-operator-system
+```
+
+Example outputs:
+
+CLI Analysis (`k8sgpt analyze --explain`):
+```
+AI Provider: openai
+
+0 default/bad-image-789bb667f5-29h2c(Deployment/bad-image)
+- Error: Back-off pulling image "nginx:nonexistent"
+Error: The Kubernetes pod is unable to pull the image "nginx:nonexistent" due to a back-off error.
+
+Solution:
+1. Check if the image "nginx:nonexistent" exists in the specified repository.
+2. Correct the image name or pull a different image if necessary.
+3. Update the pod configuration with the correct image name.
+4. Restart the pod to try pulling the correct image again.
+
+1 default/resource-heavy-pod(resource-heavy-pod)
+- Error: 0/1 nodes are available: 1 Insufficient memory...
+Solution:
+1. Check memory usage on existing nodes.
+2. Increase memory resources on nodes or add more nodes to the cluster.
+3. Ensure proper resource limits are set for pods.
+```
+
+Operator Analysis (`kubectl get results -o yaml -n k8sgpt-operator-system`):
+```yaml
+apiVersion: core.k8sgpt.ai/v1alpha1
+kind: Result
+metadata:
+  name: result-sample
+  namespace: k8sgpt-operator-system
+spec:
+  error: Back-off pulling image "nginx:nonexistent"
+  kind: Pod
+  name: bad-image-789bb667f5-29h2c
+  namespace: default
+  parent: Deployment/bad-image
+  explanation: The Kubernetes pod is unable to pull the image...
+  remediation:
+    - Check if the image exists in the repository
+    - Correct the image name or tag
+    - Update the deployment configuration
+```
+
+Both tools provide similar insights, but:
+- CLI: Immediate, interactive analysis
+- Operator: Continuous monitoring and historical tracking of issues
 
 #### Scenario 2: Resource Constraints
 
@@ -351,9 +459,6 @@ k8sgpt analyze --filter Pod --explain
 
 # Check node capacity issues
 k8sgpt analyze --filter Node
-
-# Generate comprehensive report
-k8sgpt analyze --output markdown > resource-analysis.md
 ```
 
 ##### **K8sGPT Analysis with Explanations**
@@ -408,28 +513,26 @@ k8sgpt integration activate trivy
 
 #### Security Analysis
 
-##### **Vulnerability Scanning**
+After activating Trivy integration:
 ```bash
-# Check for vulnerabilities in your cluster
-k8sgpt analyze --filter VulnerabilityReport
-```
-This will show CVEs found in your container images, including severity levels and links to detailed information.
+# Check Trivy operator deployment status
+helm list
+NAME                 	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                	APP VERSION
+trivy-operator-k8sgpt	default  	1       	2025-01-20 20:36:02.236249031 +0000 UTC	deployed	trivy-operator-0.25.0	0.23.0
 
-##### **Configuration Auditing**
-```bash
+# Once the operator is running, wait a few minutes for initial scans to complete
+# Then check for vulnerabilities and misconfigurations:
+
+# Check for vulnerabilities
+k8sgpt analyze --filter VulnerabilityReport
+
 # Check for security misconfigurations
 k8sgpt analyze --filter ConfigAuditReport
 ```
-This will identify security issues in your Kubernetes configurations, such as:
-- Containers running as root
-- Missing security contexts
-- Privileged containers
-- Unsafe volume mounts
-- Missing seccomp profiles
 
-Each issue includes a severity rating (LOW/MEDIUM/HIGH) and specific remediation advice.
+Note: The initial scan may take a few minutes to complete after the Trivy operator is deployed.
 
-### Part 5: Prometheus Integration for Metrics Analysis
+<!-- ### Part 5: Prometheus Integration for Metrics Analysis
 
 #### Install Prometheus
 First, let's install Prometheus using kube-prometheus:
@@ -457,7 +560,7 @@ Once Prometheus is running, integrate it with K8sGPT:
 k8sgpt integration activate prometheus --namespace monitoring
 ```
 
-This will allow K8sGPT to analyze metrics from your cluster components.
+This will allow K8sGPT to analyze metrics from your cluster components. -->
 
 ### Lab Completion
 
