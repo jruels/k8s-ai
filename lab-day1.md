@@ -208,7 +208,7 @@ k8sgpt analyze --output json > initial-analysis.json
 View the structured output:
 ```bash
 cat initial-analysis.json | jq
-```
+``` 
 
 The JSON output allows us to:
 - Parse and process the results programmatically
@@ -369,11 +369,6 @@ Using the CLI (on-demand analysis):
 ```bash
 # Analyze scheduling issues
 k8sgpt analyze --filter Pod --explain
-```
-
-Check node capacity issues:
-```bash
-k8sgpt analyze --filter Node
 ```
 
 Using the Operator (continuous monitoring):
