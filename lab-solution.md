@@ -50,17 +50,24 @@ jq --version
 ```
 
 ##### **Install Helm**
+
+Download the installation script:
 ```bash
-# Download the installation script
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+```
 
-# Make the script executable
+Make the script executable:
+```bash
 chmod 700 get_helm.sh
+```
 
-# Run the installation script
+Run the installation script:
+```bash
 ./get_helm.sh
+```
 
-# Verify the installation
+Verify the installation:
+```bash
 helm version
 ```
 
