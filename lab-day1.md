@@ -277,7 +277,7 @@ List all error messages:
 cat initial-analysis.json | jq -r '.results[].error[].Text'
 ```
 
-Show only high-priority issues:
+Show only pod-related issues:
 ```bash
 cat initial-analysis.json | jq -r '.results[] | select(.kind=="Pod")'
 ```
