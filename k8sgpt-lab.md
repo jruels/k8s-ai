@@ -1,5 +1,9 @@
 ### K8sGPT Lab: AI-Powered Kubernetes Troubleshooting
 
+#### Prerequisites
+
+Start minikube with 6GB memory.
+
 #### Introduction
 
 ##### **Overview of Lab Objectives**

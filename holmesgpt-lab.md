@@ -1,4 +1,8 @@
-### Part 1: Installing HolmesGPT with Helm
+### HolmesGPT Lab: AI-Powered Alert Investigation
+
+#### Prerequisites
+
+Start minikube with 6GB memory.
 
 #### Introduction
 

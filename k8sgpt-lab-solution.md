@@ -1,5 +1,19 @@
 ### Part 1: Introduction and Setup for K8sGPT
 
+#### Prerequisites
+
+Start minikube with 6GB memory:
+```bash
+minikube start --memory=6144
+```
+
+If minikube is already running, you can update its resources:
+```bash
+minikube stop
+minikube delete
+minikube start --memory=6144
+```
+
 #### Introduction
 
 ##### **Overview of the Lab Objectives**
