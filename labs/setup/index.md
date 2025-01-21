@@ -1,10 +1,11 @@
 # Lab Setup 
 At the top of the lab page, click **View on GitHub**. Click the green **Code** button in the top right corner, then click **Download as zip**. Once the download is done, extract the zip file and put it somewhere you can easily access it.
 
-### Mac/Linux
-
 The username for SSH is 
 `ubuntu`
+
+### Mac/Linux
+
 
 Open a terminal and `cd` to the extracted lab directory. Inside the directory, you will see a `keys`directory. Enter it using `cd` and run the following commands.
 
