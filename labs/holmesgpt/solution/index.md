@@ -282,7 +282,12 @@ runbooks:
 EOF
 ```
 
-Now run Holmes with your runbook:
+Now set up port forwarding for AlertManager:
+```bash
+kubectl port-forward -n monitoring svc/alertmanager-main 9093:9093
+```
+
+Then run Holmes with your runbook:
 ```bash
 holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml
 ```
