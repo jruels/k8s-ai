@@ -252,7 +252,12 @@ EOF
 
 #### Create Custom Runbooks
 
-First, let's see what issues Holmes identifies:
+First, set up port forwarding for AlertManager:
+```bash
+kubectl port-forward -n monitoring svc/alertmanager-main 9093:9093
+```
+
+Now, let's see what issues Holmes identifies:
 ```bash
 # Run Holmes without a runbook to see current issues
 holmes investigate alertmanager --alertmanager-url http://localhost:9093
@@ -280,11 +285,6 @@ runbooks:
       Verify image pull status
       Check for resource constraints
 EOF
-```
-
-Now set up port forwarding for AlertManager:
-```bash
-kubectl port-forward -n monitoring svc/alertmanager-main 9093:9093
 ```
 
 Then run Holmes with your runbook:
