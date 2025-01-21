@@ -29,10 +29,12 @@ For detailed documentation, see: https://docs.k8sgpt.ai/
 
 1. Install K8sGPT CLI
    - Download and install K8sGPT
-   - Configure your AI provider
+   - Configure your AI provider for CLI use
+   - Configure your AI provider for Operator use
    - Verify the installation
+   - Test filtering output with jq
 
-2. Deploy K8sGPT Operator (Optional)
+2. Deploy K8sGPT Operator
    - Install the operator using Helm
    - Configure necessary permissions
    - Verify operator deployment
@@ -41,7 +43,7 @@ For detailed documentation, see: https://docs.k8sgpt.ai/
 
 1. Create test scenarios
    - Deploy a pod with an invalid image
-   - Create a pod with excessive resource requests
+   - Create a pod with resource constraints (2000Gi memory)
    - What issues do you expect K8sGPT to find?
 
 2. Compare troubleshooting approaches
@@ -49,7 +51,13 @@ For detailed documentation, see: https://docs.k8sgpt.ai/
    - Use K8sGPT to analyze the same issues
    - Document the differences in approach and results
 
-3. Test different analysis modes
+3. Compare CLI vs Operator approaches
+   - Test basic analysis with CLI
+   - Test same scenario with Operator
+   - Use analyze vs analyze --explain
+   - Document key differences
+
+4. Test different analysis modes
    - Try filtering by resource types
    - Use the explain flag
    - Explore continuous monitoring
@@ -59,6 +67,7 @@ For detailed documentation, see: https://docs.k8sgpt.ai/
 1. Set up security scanning
    - Enable Trivy integration
    - Configure vulnerability scanning
+   - Set up ConfigAudit reports
    - Test security analysis features
 
 2. Analyze security reports
@@ -81,7 +90,6 @@ For detailed documentation, see: https://docs.k8sgpt.ai/
 3. Customize analysis settings
    - Modify filtering options
    - Adjust explanation detail levels
-   - Test different AI providers
 
 ### Success Criteria
 
