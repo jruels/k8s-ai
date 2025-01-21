@@ -4,6 +4,8 @@
 
 Start minikube with 6GB memory.
 
+Note: If you have resources deployed from a previous lab, run `minikube delete` to start with a fresh cluster.
+
 #### Introduction
 
 ##### **Overview of Lab Objectives**

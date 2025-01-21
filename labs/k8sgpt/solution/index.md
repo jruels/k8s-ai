@@ -14,6 +14,8 @@ minikube delete
 minikube start --memory=6144
 ```
 
+Note: If you have resources deployed from a previous lab, run `minikube delete` to start with a fresh cluster.
+
 #### Introduction
 
 ##### **Overview of the Lab Objectives**
