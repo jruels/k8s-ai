@@ -338,6 +338,62 @@ runbooks:
 EOF
 ```
 
+### Challenge Tasks
+
+1. Add more alert types to your runbooks
+   ```bash
+   # Example of adding more alert types
+   cat <<EOF >> custom_runbooks.yaml
+runbooks:
+   - match:
+       issue_name: "KubeSchedulerDown"
+     instructions: >
+       Check if the cluster is a managed cluster like EKS by fetching nodes and looking at their labels
+       If so, tell the user this is likely a known false positive in the kube-prometheus-stack alert
+       If not, check scheduler status and logs
+EOF
+   ```
+
+2. Customize investigation depth
+   ```bash
+   # Test with different verbosity levels
+   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml -vv
+   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml -vvv
+
+   # Test focused investigation
+   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml --alertmanager-alertname KubePodCrashLooping
+   ```
+
+3. Create a runbook for a complex scenario
+   ```bash
+   cat <<EOF > custom_runbooks.yaml
+runbooks:
+  - match:
+      issue_name: "KubePodNotReady"
+    instructions: >
+      # First check deployment status
+      Check deployment status and events
+      Check pod status for this deployment
+      
+      # If pods are running but not ready
+      If pods are running:
+        Check readiness probe status
+        Check liveness probe status
+        Verify service connectivity
+      
+      # If pods are not running
+      If pods are not running:
+        Check node resources
+        Check image pull status
+        Verify PVC status if applicable
+        
+      # Report findings
+      Summarize all discovered issues
+      Prioritize critical problems
+      Suggest remediation steps
+EOF
+   ```
+
 ### Lab Completion
 
 Congratulations! You have completed the HolmesGPT lab. You have learned:

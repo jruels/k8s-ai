@@ -12,6 +12,8 @@ Start minikube with 6GB memory.
 - Explore different analysis modes
 - Integrate with security scanning tools
 
+For detailed documentation, see: https://docs.k8sgpt.ai/
+
 ##### **Brief on K8sGPT**
 - **K8sGPT**: An AI-powered tool for Kubernetes cluster analysis
 - **Key Features**:

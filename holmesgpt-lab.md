@@ -8,9 +8,10 @@ Start minikube with 6GB memory.
 
 ##### **Overview of the Lab Objectives**
 - Install Helm and HolmesGPT
-- Configure different LLM backends
 - Test different investigation scenarios
 - Understand security and configuration options
+
+For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
 
 ##### **Brief on HolmesGPT**
 - **HolmesGPT**: An AI-powered tool for investigating and resolving Kubernetes alerts
@@ -19,7 +20,7 @@ Start minikube with 6GB memory.
   - Read-only access with RBAC permissions
   - Runbook automation
   - Multiple LLM backend support
-  - Integration with existing tools (PagerDuty, etc.)
+  - Integration with existing tools (Prometheus, AlertManager, etc.)
 
 #### Lab Tasks
 
@@ -39,13 +40,13 @@ Start minikube with 6GB memory.
 ### Part 2: Testing HolmesGPT
 
 1. Create test scenarios
-   - Deploy a pod with resource issues
-   - Deploy a pod with image issues
-   - What issues do you expect HolmesGPT to find?
+   - Deploy a pod that requests more memory than available (1000Gi)
+   - Deploy a pod with a non-existent image tag (nginx:nonexistent)
+   - What alerts do you expect these issues to generate?
 
 2. Install and configure HolmesGPT CLI
    - Install pipx if needed
-   - Install HolmesGPT CLI
+   - Install HolmesGPT CLI (v0.7.2)
    - Configure your API key
 
 3. Test basic HolmesGPT commands
@@ -65,15 +66,15 @@ Start minikube with 6GB memory.
    - Create runbooks for common issues
    - Test runbooks with HolmesGPT
 
-#### Challenge Tasks
+#### Challenge Tasks (Optional)
 
 1. Add more alert types to your runbooks
    - What other alerts might be useful?
    - How would you structure the investigation steps?
 
-2. Test different LLM backends
-   - Try different models
-   - Compare response quality
+2. Customize investigation depth
+   - Try different verbosity levels
+   - Test focused vs broad investigations
 
 3. Create a runbook for a complex scenario
    - Combine multiple issues
