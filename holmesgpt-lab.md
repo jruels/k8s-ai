@@ -86,8 +86,3 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
 2. You can run basic investigations
 3. You have created and tested custom runbooks
 4. You understand how to extend runbooks for new scenarios
-
-### Additional Resources
-- HolmesGPT Documentation
-- Prometheus Operator Documentation
-- AlertManager Documentation

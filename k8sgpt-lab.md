@@ -75,22 +75,6 @@ For detailed documentation, see: https://docs.k8sgpt.ai/
    - Review configuration issues
    - Understand remediation suggestions
 
-#### Challenge Tasks
-
-1. Create complex failure scenarios
-   - Combine multiple issues
-   - Test K8sGPT's analysis capabilities
-   - Compare CLI vs Operator results
-
-2. Integrate with existing tools
-   - Set up monitoring integration
-   - Configure alerts
-   - Test automated analysis
-
-3. Customize analysis settings
-   - Modify filtering options
-   - Adjust explanation detail levels
-
 ### Success Criteria
 
 1. You can install and configure K8sGPT
@@ -98,8 +82,3 @@ For detailed documentation, see: https://docs.k8sgpt.ai/
 3. You can use both CLI and Operator effectively
 4. You can integrate security scanning
 5. You can interpret and act on K8sGPT's suggestions
-
-### Additional Resources
-- K8sGPT Documentation
-- Trivy Documentation
-- Kubernetes Troubleshooting Guide
