@@ -257,7 +257,7 @@ First, set up port forwarding for AlertManager:
 kubectl port-forward -n monitoring svc/alertmanager-main 9093:9093
 ```
 
-Now, let's see what issues Holmes identifies:
+Now, open a new terminal and let's see what issues Holmes identifies:
 ```bash
 # Run Holmes without a runbook to see current issues
 holmes investigate alertmanager --alertmanager-url http://localhost:9093
