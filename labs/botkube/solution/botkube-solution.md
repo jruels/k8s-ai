@@ -136,26 +136,18 @@ botkube install --version v1.14.0 \
 --set 'plugins.repositories.botkubeExtra.url'=https://github.com/kubeshop/botkube-plugins/releases/download/v1.14.0/plugins-index.yaml
 ```
 
-Test Helm integration with these read-only commands:
+Install a sample Helm chart to test the integration:
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install my-nginx bitnami/nginx
+```
+
+Test Helm integration within slack with these read-only commands:
 ```
 @Botkube helm help
 @Botkube helm list
-@Botkube helm status <release-name>
+@Botkube helm status my-nginx
 @Botkube helm version
-```
-
-For filtered listing, use:
-```
-@Botkube helm list -f 'ara[a-z]+'
-```
-
-Note: The following read-write commands are also available if RBAC is properly configured:
-```
-@Botkube helm rollback <release-name> <revision>
-@Botkube helm test <release-name>
-@Botkube helm uninstall <release-name>
-@Botkube helm upgrade <release-name> <chart>
-@Botkube helm install <release-name> <chart>
 ```
 
 > **Note**: The `--wait` flag is not supported by the Botkube Helm plugin. Also, when using flags, ensure there's a space between the flag and its value (use `-o yaml` instead of `-oyaml`).
@@ -171,7 +163,6 @@ Remove Botkube from cluster:
 ```bash
 botkube uninstall
 ```
-
 ### Lab Completion
 
 Congratulations! You have completed the Botkube lab. You have learned:
