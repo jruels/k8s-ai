@@ -190,9 +190,6 @@ cd kube-prometheus
 # Create the namespace and CRDs
 kubectl create -f manifests/setup
 
-# Wait for CRDs to be ready
-until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
-
 # Create the monitoring stack
 kubectl create -f manifests/
 ```
