@@ -348,7 +348,7 @@ EOF
 ### Challenge Tasks
 
 1. Add more alert types to your runbooks
-   ```bash
+```bash
    # Example of adding more alert types
    cat <<EOF >> custom_runbooks.yaml
 runbooks:
@@ -359,7 +359,7 @@ runbooks:
        If so, tell the user this is likely a known false positive in the kube-prometheus-stack alert
        If not, check scheduler status and logs
 EOF
-   ```
+```
 
 2. Customize investigation depth
    ```bash
