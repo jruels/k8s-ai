@@ -372,7 +372,7 @@ EOF
    ```
 
 3. Create a runbook for a complex scenario
-   ```bash
+```bash
    cat <<EOF > custom_runbooks.yaml
 runbooks:
   - match:
@@ -399,7 +399,7 @@ runbooks:
       Prioritize critical problems
       Suggest remediation steps
 EOF
-   ```
+```
 
 ### Lab Completion
 
