@@ -159,20 +159,11 @@ Once you have access to the web UI, you can interact with your Kubernetes cluste
 
 1. In the web UI, select "kubert - kubectl" from the assistant options
 2. Try these commands in sequence to create and inspect resources:
-   ```
-   create namespace test-kubert
-   ```
-   This will create a new namespace for our tests.
 
    ```
-   show namespaces
+   create a redis deployment with the redis image in the kubert-assistant namespace
    ```
-   Verify that our new namespace was created.
-
-   ```
-   create a redis deployment with the redis image in the test-kubert namespace
-   ```
-   Creates a deployment running Redis in the test-kubert namespace.
+   Creates a deployment running Redis in the kubert-assistant namespace.
 
    ```
    describe the redis deployment
@@ -189,7 +180,6 @@ Try these commands to explore deployment management:
 scale the redis deployment to 3 replicas
 get pods to verify the scaling
 show the deployment history
-rollout status of redis deployment
 ```
 
 #### Exercise 2: Pod Investigation
@@ -197,42 +187,41 @@ Investigate pod details and logs:
 ```
 show logs from redis pods
 describe the redis pods
-get redis pod metrics
-show redis pod resource usage
 ```
 
-#### Exercise 3: Service Creation and Networking
-Set up networking for the deployment:
-```
-expose the redis deployment on port 6379
-describe the redis service
-get endpoints for the redis service
-```
-
-#### Exercise 4: ConfigMaps and Redis Configuration
+#### Exercise 3: ConfigMaps and Redis Configuration
 Create and manage Redis configuration:
 ```
-create a configmap named redis-config with data "maxmemory=2mb"
-show all redis configmaps in the test-kubert namespace
+create a configmap named redis-config
+get the redis-config configmap
 describe the redis-config configmap
 ```
 
-#### Exercise 5: Resource Quotas and Limits
+#### Exercise 4: Resource Quotas and Limits
 Manage resource constraints:
 ```
-create resource quota for test-kubert namespace
 set memory limit to 512Mi for redis deployment
 set cpu limit to 500m for redis deployment
-show resource quotas
+describe the redis deployment
+set memory limit to 2Gi for redis deployment
+set cpu limit to 2000m for redis deployment
 ```
 
-#### Exercise 6: Labels and Selectors
+#### Exercise 5: Labels and Selectors
 Work with labels and selectors:
 ```
 label redis pods with environment=testing
 show pods with the testing label
 remove the environment label from redis pods
-list all labels in the namespace
+```
+
+#### Exercise 6: Cleanup Resources
+Remove the Redis deployment and verify:
+```
+delete the redis deployment
+delete the redis configmap
+get pods to verify deletion
+get configmaps to verify deletion
 ```
 
 > **Note**: The beauty of Kubert Assistant is that you can use natural language. If a command doesn't work exactly as written, try rephrasing it or asking the assistant for help.
