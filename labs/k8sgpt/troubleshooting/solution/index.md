@@ -452,6 +452,67 @@ Both tools provide similar insights, but:
 - CLI: Immediate, interactive analysis
 - Operator: Continuous monitoring and historical tracking of issues
 
+##### **Implementing the Fixes**
+
+Let's implement K8sGPT's suggested solutions for each issue:
+
+1. Fix the invalid image deployment:
+```bash
+# Update the deployment to use a valid nginx tag
+kubectl set image deployment/bad-image memory-demo=nginx:latest
+
+# Verify the fix
+k8sgpt analyze --filter Pod
+```
+
+2. Fix the resource-heavy pod:
+```bash
+# Since pod resource requests are immutable, we need to recreate the pod
+kubectl delete pod resource-heavy-pod
+
+# Recreate the pod with appropriate resource requests
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-heavy-pod
+spec:
+  containers:
+  - name: memory-demo
+    image: nginx
+    resources:
+      requests:
+        memory: "100Mi"
+        cpu: "100m"
+EOF
+
+# Verify the fix
+k8sgpt analyze --filter Pod
+```
+
+3. Fix the service with no endpoints:
+```bash
+# Create deployment for the service
+kubectl create deployment nonexistent --image=redis
+
+# Add the matching label
+kubectl label deployment nonexistent app=nonexistent
+
+# Verify the fix
+k8sgpt analyze --filter Service
+```
+
+After applying these fixes, run a final analysis to confirm all issues are resolved:
+```bash
+k8sgpt analyze --explain
+```
+
+Note: In production environments, you would typically:
+1. Update your source configuration (YAML files, Helm charts, etc.)
+2. Follow proper change management procedures
+3. Use deployments or other controllers to manage pod lifecycle
+4. Implement rolling updates to minimize service disruption
+
 #### Scenario 2: Resource Constraints
 
 ##### **Create Resource-Constrained Pod**
@@ -538,81 +599,196 @@ The `--explain` flag provides:
 
 This is much more user-friendly than parsing through logs and events manually, especially for those new to Kubernetes troubleshooting.
 
-### Part 4: Security Scanning with Trivy Integration
+#### Scenario 3: Network Policy Issues
 
-K8sGPT can integrate with Trivy to provide vulnerability and configuration scanning.
-
-#### Enable Trivy Integration
-
-Check available integrations:
+##### **Create Network Policy Test**
 ```bash
-k8sgpt integrations list
+# Create a restrictive network policy
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+EOF
+
+# Create test pods
+kubectl create deployment web --image=nginx
+kubectl expose deployment web --port=80
 ```
 
-Activate Trivy:
+##### **K8sGPT Analysis**
 ```bash
-k8sgpt integration activate trivy
+# Analyze network policies
+k8sgpt analyze --filter NetworkPolicy
+
+# Get detailed explanation
+k8sgpt analyze --explain
 ```
 
-#### Security Analysis
+##### **Implementing the Fix**
 
-After activating Trivy integration:
-
-Check Trivy operator deployment status:
+Let's modify the network policy to be more specific:
 ```bash
-helm list
+# Update the network policy to allow specific traffic
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector:
+    matchLabels:
+      app: web
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: allowed
+    ports:
+    - protocol: TCP
+      port: 80
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          access: allowed
+    ports:
+    - protocol: TCP
+      port: 80
+EOF
+
+# Label the web pods to match the policy
+kubectl label pods -l app=web access=allowed
+
+# Verify the fix
+k8sgpt analyze --filter NetworkPolicy
 ```
 
-Example output:
-```
-NAME                 	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                	APP VERSION
-trivy-operator-k8sgpt	default  	1       	2025-01-20 20:36:02.236249031 +0000 UTC	deployed	trivy-operator-0.25.0	0.23.0
-```
+This updated policy:
+1. Only applies to pods with label `app: web`
+2. Allows ingress traffic only from pods labeled `access: allowed`
+3. Allows egress traffic only to pods labeled `access: allowed`
+4. Restricts traffic to TCP port 80
 
-Once the operator is running, wait a few minutes for initial scans to complete.
-Then check for vulnerabilities and misconfigurations:
+#### Scenario 4: Storage Issues
 
-Check for vulnerabilities:
+##### **Create Storage Problem**
 ```bash
-k8sgpt analyze --filter VulnerabilityReport
+# Create PVC with unavailable storage class
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nonexistent-storage
+EOF
+
+# Create pod using PVC
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-test
+spec:
+  containers:
+  - name: test
+    image: nginx
+    volumeMounts:
+    - name: test-volume
+      mountPath: /data
+  volumes:
+  - name: test-volume
+    persistentVolumeClaim:
+      claimName: test-pvc
+EOF
 ```
 
-Check for security misconfigurations:
+##### **K8sGPT Analysis**
 ```bash
-k8sgpt analyze --filter ConfigAuditReport
+# Check storage issues
+k8sgpt analyze --filter PersistentVolumeClaim
+
+# Get detailed analysis
+k8sgpt analyze --explain
 ```
 
-Note: The initial scan may take a few minutes to complete after the Trivy operator is deployed.
+##### **Implementing the Fix**
 
-<!-- ### Part 5: Prometheus Integration for Metrics Analysis
-
-#### Install Prometheus
-First, let's install Prometheus using kube-prometheus:
+Let's address both the StorageClass and PVC issues:
 
 ```bash
-# Clone the kube-prometheus repository
-git clone https://github.com/prometheus-operator/kube-prometheus.git
-cd kube-prometheus
+# Create a new StorageClass using the default provisioner (minikube)
+cat <<EOF | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+EOF
 
-# Create the namespace and CRDs
-kubectl create -f manifests/setup
+# Since PVC spec is immutable, we need to recreate it
+kubectl delete pvc test-pvc
 
-# Wait for CRDs to be ready
-until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+EOF
 
-# Create the monitoring stack
-kubectl create -f manifests/
+# Delete and recreate the pod to pick up the new PVC
+kubectl delete pod storage-test
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-test
+spec:
+  containers:
+  - name: test
+    image: nginx
+    volumeMounts:
+    - name: test-volume
+      mountPath: /data
+  volumes:
+  - name: test-volume
+    persistentVolumeClaim:
+      claimName: test-pvc
+EOF
+
+# Verify the fixes
+k8sgpt analyze --filter PersistentVolumeClaim
 ```
 
-#### Enable Prometheus Integration
-Once Prometheus is running, integrate it with K8sGPT:
-
-```bash
-# Activate Prometheus integration
-k8sgpt integration activate prometheus --namespace monitoring
-```
-
-This will allow K8sGPT to analyze metrics from your cluster components. -->
+This remediation:
+1. Creates a StorageClass suitable for minikube
+2. Recreates the PVC with the correct StorageClass
+3. Recreates the pod to use the updated PVC
+4. Verifies that everything is working correctly
 
 ### Lab Completion
 
