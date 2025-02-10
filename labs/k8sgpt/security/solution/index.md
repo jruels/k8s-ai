@@ -168,7 +168,7 @@ spec:
 EOF
 ```
 
-### Part 4: Security Scanning with Trivy Integration
+### Part 1: Security Scanning with Trivy Integration
 
 K8sGPT can integrate with Trivy to provide vulnerability and configuration scanning.
 
@@ -213,6 +213,256 @@ k8sgpt analyze --filter ConfigAuditReport
 ```
 
 Note: The initial scan may take a few minutes to complete after the Trivy operator is deployed.
+
+### Part 2: Security Scenarios and Remediation
+
+#### Scenario 1: Privileged Container
+
+##### **Create Issue**
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      allowPrivilegeEscalation: true
+      privileged: true
+EOF
+```
+
+##### **Analyze Issue**
+```bash
+# Filter for privileged container issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-privileged-pod") | select(.error[].Text | contains("securityContext.privileged")) | {kind, name, error: [.error[] | select(.Text | contains("securityContext.privileged"))], details}'
+```
+
+##### **Fix Issue**
+```bash
+kubectl delete pod privileged-pod
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      allowPrivilegeEscalation: false
+      privileged: false
+      runAsNonRoot: true
+      runAsUser: 1000
+EOF
+```
+
+##### **Verify Fix**
+```bash
+# Filter for privileged container issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-privileged-pod") | select(.error[].Text | contains("securityContext.privileged")) | {kind, name, error: [.error[] | select(.Text | contains("securityContext.privileged"))], details}'
+```
+
+#### Scenario 2: Writable Root Filesystem
+
+##### **Create Issue**
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writable-root
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      readOnlyRootFilesystem: false
+EOF
+```
+
+##### **Analyze Issue**
+```bash
+# Filter for root filesystem issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-writable-root") | select(.error[].Text | contains("readOnlyRootFilesystem")) | {kind, name, error: [.error[] | select(.Text | contains("readOnlyRootFilesystem"))], details}'
+```
+
+##### **Fix Issue**
+```bash
+kubectl delete pod writable-root
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writable-root
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      readOnlyRootFilesystem: true
+EOF
+```
+
+##### **Verify Fix**
+```bash
+# Filter for root filesystem issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-writable-root") | select(.error[].Text | contains("readOnlyRootFilesystem")) | {kind, name, error: [.error[] | select(.Text | contains("readOnlyRootFilesystem"))], details}'
+```
+
+#### Scenario 3: Host Network Access
+
+##### **Create Issue**
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: host-network-pod
+spec:
+  hostNetwork: true
+  containers:
+  - name: nginx
+    image: nginx
+EOF
+```
+
+##### **Analyze Issue**
+```bash
+# Filter for host network issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-host-network-pod") | select(.error[].Text | contains("hostNetwork")) | {kind, name, error: [.error[] | select(.Text | contains("hostNetwork"))], details}'
+```
+
+##### **Fix Issue**
+```bash
+kubectl delete pod host-network-pod
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: host-network-pod
+spec:
+  hostNetwork: false
+  containers:
+  - name: nginx
+    image: nginx
+EOF
+```
+
+##### **Verify Fix**
+```bash
+# Filter for host network issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-host-network-pod") | select(.error[].Text | contains("hostNetwork")) | {kind, name, error: [.error[] | select(.Text | contains("hostNetwork"))], details}'
+```
+
+#### Scenario 4: Host Path Volume
+
+##### **Create Issue**
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: host-volume
+      mountPath: /host
+  volumes:
+  - name: host-volume
+    hostPath:
+      path: /tmp
+EOF
+```
+
+##### **Analyze Issue**
+```bash
+# Filter for hostPath issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-hostpath-pod") | select(.error[].Text | contains("hostPath")) | {kind, name, error: [.error[] | select(.Text | contains("hostPath"))], details}'
+```
+
+##### **Fix Issue**
+```bash
+kubectl delete pod hostpath-pod
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: data-volume
+      mountPath: /data
+  volumes:
+  - name: data-volume
+    emptyDir: {}
+EOF
+```
+
+##### **Verify Fix**
+```bash
+# Filter for hostPath issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-hostpath-pod") | select(.error[].Text | contains("hostPath")) | {kind, name, error: [.error[] | select(.Text | contains("hostPath"))], details}'
+```
+
+#### Scenario 5: Automatic Service Account Token Mounting
+
+##### **Create Issue**
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: auto-mount-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+EOF
+```
+
+##### **Analyze Issue**
+```bash
+# Filter for service account token issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-auto-mount-pod") | select(.error[].Text | contains("automountServiceAccountToken")) | {kind, name, error: [.error[] | select(.Text | contains("automountServiceAccountToken"))], details}'
+```
+
+##### **Fix Issue**
+```bash
+kubectl delete pod auto-mount-pod
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: auto-mount-pod
+spec:
+  automountServiceAccountToken: false
+  containers:
+  - name: nginx
+    image: nginx
+EOF
+```
+
+##### **Verify Fix**
+```bash
+# Filter for service account token issues for specific pod
+k8sgpt analyze --filter ConfigAuditReport --explain --output json | jq '.results[] | select(.name == "default/pod-auto-mount-pod") | select(.error[].Text | contains("automountServiceAccountToken")) | {kind, name, error: [.error[] | select(.Text | contains("automountServiceAccountToken"))], details}'
+```
 
 ### Lab Completion
 
