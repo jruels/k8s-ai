@@ -177,6 +177,500 @@ Investigate specific resources:
 holmes ask "why is my resource-heavy-pod pending?"
 ```
 
+##### **Advanced Usage Examples**
+
+Investigate specific namespaces:
+```bash
+holmes ask "what's happening in the kube-system namespace?"
+```
+
+Get detailed pod analysis:
+```bash
+holmes ask "analyze the resource usage of all pods in my cluster"
+```
+
+Debug networking issues:
+```bash
+holmes ask "are there any networking issues between my services?"
+```
+
+##### **Additional Test Scenarios**
+
+###### **Scenario 1: Fixing Resource Configuration Issues**
+
+First, deploy a pod with resource configuration issues:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-issues-pod
+  labels:
+    app: resource-issues
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        memory: "1000Gi"  # Intentionally excessive
+        cpu: "100"        # Intentionally excessive
+EOF
+```
+
+Now, let's use HolmesGPT to analyze and fix the issues:
+```bash
+# Ask HolmesGPT to analyze the resource configuration
+holmes ask "analyze the resource configuration of pod resource-issues-pod and provide a fixed YAML. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+```
+
+HolmesGPT will suggest just the essential configuration:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: resource-issues
+  name: resource-issues-pod
+  namespace: default
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    resources:
+      requests:
+        cpu: "1"
+        memory: "1Gi"
+  restartPolicy: Always
+```
+
+###### **Scenario 2: Fixing Memory Leak Issues**
+
+Deploy a pod with potential memory leak:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-leak-pod
+  labels:
+    app: memory-leak
+spec:
+  containers:
+  - name: memory-leak
+    image: polinux/stress
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+EOF
+```
+
+Get HolmesGPT's analysis and fix:
+```bash
+# Ask for analysis and fixed configuration
+holmes ask "analyze memory-leak-pod for potential issues and provide a fixed YAML with proper resource limits"
+```
+
+Apply the suggested fixed configuration:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-leak-pod
+  labels:
+    app: memory-leak
+spec:
+  containers:
+  - name: memory-leak
+    image: polinux/stress
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+    livenessProbe:
+      exec:
+        command:
+        - sh
+        - -c
+        - ps aux | grep stress
+      initialDelaySeconds: 5
+      periodSeconds: 5
+EOF
+```
+
+###### **Scenario 3: Fixing Liveness Probe Issues**
+
+Deploy a pod with problematic liveness probe:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe-issues-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    livenessProbe:
+      httpGet:
+        path: /nonexistent
+        port: 80
+      initialDelaySeconds: 3
+      periodSeconds: 3
+EOF
+```
+
+Get HolmesGPT's analysis and fix:
+```bash
+# Ask for probe configuration analysis and fix
+holmes ask "analyze the liveness probe configuration of probe-issues-pod and provide a fixed YAML. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+```
+
+Apply the suggested fixed configuration:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe-issues-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+EOF
+```
+
+###### **Scenario 4: Fixing Service Endpoint Issues**
+
+Deploy a service with missing endpoints:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: missing-endpoint-svc
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: nonexistent
+EOF
+```
+
+Get HolmesGPT's analysis and fix:
+```bash
+# Ask for service configuration analysis
+holmes ask "analyze the service missing-endpoint-svc and its endpoints, then provide a fixed YAML including the necessary deployment. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+```
+
+Apply the suggested fixed configuration:
+```bash
+# First create the deployment
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+EOF
+
+# Then create the properly configured service
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: missing-endpoint-svc
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: backend
+EOF
+```
+
+###### **Scenario 5: Fixing Security Context Issues**
+
+Deploy a pod with security issues:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: security-issues-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      privileged: true
+      runAsUser: 0
+EOF
+```
+
+Get HolmesGPT's analysis and fix:
+```bash
+# Ask for security configuration analysis
+holmes ask "analyze the security context of security-issues-pod and provide a fixed YAML following security best practices. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+```
+
+Apply the suggested fixed configuration:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: security-issues-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+EOF
+```
+
+###### **Scenario 6: Fixing Pod Affinity Issues**
+
+Deploy pods with problematic affinity rules:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: affinity-issue-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: nonexistent-label
+            operator: In
+            values:
+            - nonexistent-value
+EOF
+```
+
+Get HolmesGPT's analysis and fix:
+```bash
+# Ask for affinity configuration analysis
+holmes ask "analyze the affinity rules of affinity-issue-pod and provide a fixed YAML. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+```
+
+HolmesGPT will suggest just the essential configuration:
+```yaml
+spec:
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: kubernetes.io/os
+            operator: In
+            values:
+            - linux
+  containers:
+  - name: nginx
+    image: nginx
+```
+
+###### **Scenario 7: Fixing Network Policy Issues**
+
+Deploy a problematic network policy:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrictive-policy
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress: []
+EOF
+```
+
+Get HolmesGPT's analysis and fix:
+```bash
+# Ask for network policy analysis
+holmes ask "analyze the network policy restrictive-policy and provide a fixed YAML that allows essential traffic. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+```
+
+HolmesGPT will suggest just the essential configuration:
+```yaml
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+```
+
+For each scenario above, you can also use HolmesGPT to verify the fixes:
+```bash
+# Verify the fix
+holmes ask "verify if the recent changes to [pod/service name] resolved the issues"
+
+# Get a comprehensive analysis
+holmes ask "analyze the current state of the cluster and confirm all issues are resolved"
+```
+
+##### **Using HolmesGPT for Complex Analysis**
+
+###### **Security Analysis**
+```bash
+# Check for security vulnerabilities
+holmes ask "are there any pods running with privileged security context?"
+
+# Analyze network policies
+holmes ask "what network policies are in place and are they properly configured?"
+
+# Check RBAC configuration
+holmes ask "analyze the RBAC permissions in my cluster"
+```
+
+###### **Performance Investigation**
+```bash
+# Resource utilization analysis
+holmes ask "which pods are consuming the most resources?"
+
+# Node analysis
+holmes ask "are there any nodes under heavy load?"
+
+# Scaling analysis
+holmes ask "analyze the HPA configuration and scaling patterns"
+```
+
+###### **Configuration Audit**
+```bash
+# Best practices check
+holmes ask "are there any pods not following Kubernetes best practices?"
+
+# Resource quotas analysis
+holmes ask "analyze resource quotas and limits across all namespaces"
+
+# Storage configuration
+holmes ask "check for any storage-related issues or misconfigurations"
+```
+
+##### **Troubleshooting Common Issues**
+
+###### **Investigating CrashLoopBackOff**
+```bash
+# Get detailed analysis of crashing pods
+holmes ask "why is pod $POD_NAME in CrashLoopBackOff?"
+
+# Check container logs
+holmes ask "show me the logs for the crashing container in pod $POD_NAME"
+```
+
+###### **Network Connectivity Issues**
+```bash
+# Service connectivity
+holmes ask "can service A reach service B?"
+
+# DNS resolution
+holmes ask "are there any DNS resolution issues in the cluster?"
+```
+
+###### **Resource Constraints**
+```bash
+# Node pressure analysis
+holmes ask "are any nodes experiencing resource pressure?"
+
+# Pod eviction analysis
+holmes ask "why are pods being evicted?"
+```
+
+##### **Integration with Other Tools**
+
+###### **Using with kubectl**
+```bash
+# Combine kubectl output with Holmes analysis
+kubectl get pods -A | holmes ask "analyze this pod list for potential issues"
+
+# Analyze events
+kubectl get events --all-namespaces | holmes ask "what significant events should I be concerned about?"
+```
+
+###### **Using with Logs**
+```bash
+# Analyze application logs
+kubectl logs $POD_NAME | holmes ask "what errors are present in these logs?"
+
+# Analyze system logs
+kubectl logs -n kube-system $SYSTEM_POD | holmes ask "analyze these system logs for issues"
+```
+
 ### Part 3: Custom Runbooks with AlertManager
 
 First, let's set up Prometheus and our test application:

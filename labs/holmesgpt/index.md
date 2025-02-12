@@ -56,6 +56,77 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
    - Check exposed services
    - Investigate specific resources
 
+4. Complete the following test scenarios:
+
+   **Scenario 1: Resource Configuration Issues**
+   - Deploy a pod with excessive resource requests
+   - Use HolmesGPT to analyze and fix the configuration
+
+   **Scenario 2: Memory Leak Issues**
+   - Deploy a pod with potential memory leak
+   - Add proper resource limits and monitoring
+
+   **Scenario 3: Liveness Probe Issues**
+   - Deploy a pod with problematic liveness probe
+   - Fix probe configuration and add readiness probe
+
+   **Scenario 4: Service Endpoint Issues**
+   - Deploy a service with missing endpoints
+   - Fix service and deployment configuration
+
+   **Scenario 5: Security Context Issues**
+   - Deploy a pod with security issues
+   - Implement security best practices
+
+   **Scenario 6: Pod Affinity Issues**
+   - Deploy pods with problematic affinity rules
+   - Fix node affinity configuration
+
+   **Scenario 7: Network Policy Issues**
+   - Deploy a problematic network policy
+   - Configure appropriate traffic rules
+
+5. Using HolmesGPT for Complex Analysis
+
+   **Security Analysis**
+   - Check for security vulnerabilities
+   - Analyze network policies
+   - Check RBAC configuration
+
+   **Performance Investigation**
+   - Analyze resource utilization
+   - Check node status
+   - Review scaling patterns
+
+   **Configuration Audit**
+   - Check for best practices
+   - Analyze resource quotas
+   - Review storage configuration
+
+6. Troubleshooting Common Issues
+
+   **Investigating CrashLoopBackOff**
+   - Get detailed analysis of crashing pods
+   - Check container logs
+
+   **Network Connectivity Issues**
+   - Test service connectivity
+   - Check DNS resolution
+
+   **Resource Constraints**
+   - Analyze node pressure
+   - Check pod evictions
+
+7. Integration with Other Tools
+
+   **Using with kubectl**
+   - Analyze pod lists
+   - Review cluster events
+
+   **Using with Logs**
+   - Analyze application logs
+   - Review system logs
+
 ### Part 3: Custom Runbooks with AlertManager
 
 1. Set up monitoring infrastructure
