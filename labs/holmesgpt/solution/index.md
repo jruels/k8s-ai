@@ -246,61 +246,58 @@ spec:
 
 ###### **Scenario 2: Fixing Memory Leak Issues**
 
-Deploy a pod with potential memory leak:
+Deploy a pod with excessive memory usage:
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
-  name: memory-leak-pod
+  name: memory-heavy-pod
   labels:
-    app: memory-leak
+    app: memory-test
 spec:
   containers:
-  - name: memory-leak
-    image: polinux/stress
-    command: ["stress"]
-    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
-EOF
-```
-
-Get HolmesGPT's analysis and fix:
-```bash
-# Ask for analysis and fixed configuration
-holmes ask "analyze memory-leak-pod for potential issues and provide a fixed YAML with proper resource limits"
-```
-
-Apply the suggested fixed configuration:
-```bash
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: memory-leak-pod
-  labels:
-    app: memory-leak
-spec:
-  containers:
-  - name: memory-leak
-    image: polinux/stress
-    command: ["stress"]
-    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+  - name: nginx
+    image: nginx
     resources:
-      limits:
-        memory: "512Mi"
-        cpu: "500m"
       requests:
-        memory: "256Mi"
-        cpu: "250m"
-    livenessProbe:
-      exec:
-        command:
-        - sh
-        - -c
-        - ps aux | grep stress
-      initialDelaySeconds: 5
-      periodSeconds: 5
+        memory: "2Gi"
+      limits:
+        memory: "4Gi"
 EOF
+```
+
+Ask HolmesGPT to analyze the pod and suggest appropriate resource limits:
+```bash
+holmes ask "analyze memory-heavy-pod and suggest appropriate memory limits based on nginx best practices. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+```
+
+Apply the fixed YAML suggested by HolmesGPT:
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-heavy-pod
+  labels:
+    app: memory-test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+EOF
+```
+
+Verify the fix:
+```bash
+holmes ask "verify if memory-heavy-pod is now running with appropriate resource limits"
 ```
 
 ###### **Scenario 3: Fixing Liveness Probe Issues**

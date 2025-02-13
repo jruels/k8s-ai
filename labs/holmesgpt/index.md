@@ -65,8 +65,8 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
    - Verify the fix worked, if not use HolmesGPT to debug further
 
    **Scenario 2: Fixing Memory Leak Issues**
-   - Deploy a pod with potential memory leak
-   - Ask HolmesGPT to analyze the pod and provide a fixed YAML with proper resource limits
+   - Deploy a pod with excessive memory usage
+   - Ask HolmesGPT to analyze the pod and suggest appropriate memory limits based on nginx best practices
    - Apply the fixed YAML suggested by HolmesGPT
    - Verify the fix worked, if not use HolmesGPT to debug further
 
@@ -128,26 +128,19 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
 
 ### Success Criteria
 
-1. You have HolmesGPT installed and configured
-2. You can run basic investigations
-3. You have created and tested custom runbooks
-4. You understand how to extend runbooks for new scenarios
-5. You can successfully:
-   - Deploy problematic Kubernetes configurations
-   - Use HolmesGPT to analyze issues and get fixed YAML
-   - Apply the suggested YAML fixes
-   - Verify if the fixes worked
-   - Use HolmesGPT to debug any remaining issues
-6. You have completed all test scenarios:
-   - Fixed resource configuration issues
-   - Fixed memory leak issues
-   - Fixed liveness probe issues
-   - Fixed service endpoint issues
-   - Fixed security context issues
-   - Fixed pod affinity issues
-   - Fixed network policy issues
-7. You understand how to:
-   - Ask HolmesGPT for specific YAML fixes
-   - Interpret and apply the suggested configurations
-   - Verify the effectiveness of applied fixes
-   - Debug issues when fixes don't work as expected
+You have successfully completed the lab when:
+
+1. HolmesGPT is installed and configured:
+   - Helm chart is deployed
+   - API key is configured
+   - CLI tool is installed
+
+2. You can demonstrate fixing each type of issue:
+   - Get a fixed YAML from HolmesGPT
+   - Apply the YAML
+   - Show the issue is resolved
+
+3. You can create and use a custom runbook:
+   - Define investigation steps
+   - Run with AlertManager
+   - Show automated resolution
