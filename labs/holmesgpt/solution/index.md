@@ -648,26 +648,6 @@ holmes ask "are any nodes experiencing resource pressure?"
 holmes ask "why are pods being evicted?"
 ```
 
-##### **Integration with Other Tools**
-
-###### **Using with kubectl**
-```bash
-# Combine kubectl output with Holmes analysis
-kubectl get pods -A | holmes ask "analyze this pod list for potential issues"
-
-# Analyze events
-kubectl get events --all-namespaces | holmes ask "what significant events should I be concerned about?"
-```
-
-###### **Using with Logs**
-```bash
-# Analyze application logs
-kubectl logs $POD_NAME | holmes ask "what errors are present in these logs?"
-
-# Analyze system logs
-kubectl logs -n kube-system $SYSTEM_POD | holmes ask "analyze these system logs for issues"
-```
-
 ### Part 3: Custom Runbooks with AlertManager
 
 First, let's set up Prometheus and our test application:
