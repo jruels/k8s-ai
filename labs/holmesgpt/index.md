@@ -71,8 +71,8 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
    - Verify the fix worked, if not use HolmesGPT to debug further
 
    **Scenario 3: Fixing Liveness Probe Issues**
-   - Deploy a pod with problematic liveness probe
-   - Ask HolmesGPT to analyze the probe configuration and provide a fixed YAML
+   - Deploy a pod with a liveness probe checking a nonexistent path (/nonexistent) every 3 seconds
+   - Ask HolmesGPT to analyze the probe configuration and provide a fixed YAML following best practices
    - Apply the fixed YAML suggested by HolmesGPT
    - Verify the fix worked, if not use HolmesGPT to debug further
 
@@ -83,19 +83,19 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
    - Verify the fix worked, if not use HolmesGPT to debug further
 
    **Scenario 5: Fixing Security Context Issues**
-   - Deploy a pod with security issues
+   - Deploy a pod with privileged mode enabled and running as root
    - Ask HolmesGPT to analyze the security context and provide a fixed YAML following best practices
    - Apply the fixed YAML suggested by HolmesGPT
    - Verify the fix worked, if not use HolmesGPT to debug further
 
    **Scenario 6: Fixing Pod Affinity Issues**
-   - Deploy pods with problematic affinity rules
-   - Ask HolmesGPT to analyze the affinity rules and provide a fixed YAML
+   - Deploy a pod with nodeAffinity requiring a nonexistent label (nonexistent-label=nonexistent-value)
+   - Ask HolmesGPT to analyze the affinity rules and provide a fixed YAML following best practices
    - Apply the fixed YAML suggested by HolmesGPT
    - Verify the fix worked, if not use HolmesGPT to debug further
 
    **Scenario 7: Fixing Network Policy Issues**
-   - Deploy a problematic network policy
+   - Deploy a restrictive network policy that blocks all ingress and egress traffic
    - Ask HolmesGPT to analyze the policy and provide a fixed YAML that allows essential traffic
    - Apply the fixed YAML suggested by HolmesGPT
    - Verify the fix worked, if not use HolmesGPT to debug further
@@ -128,19 +128,26 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
 
 ### Success Criteria
 
-You have successfully completed the lab when:
-
-1. HolmesGPT is installed and configured:
-   - Helm chart is deployed
-   - API key is configured
-   - CLI tool is installed
-
-2. You can demonstrate fixing each type of issue:
-   - Get a fixed YAML from HolmesGPT
-   - Apply the YAML
-   - Show the issue is resolved
-
-3. You can create and use a custom runbook:
-   - Define investigation steps
-   - Run with AlertManager
-   - Show automated resolution
+1. You have HolmesGPT installed and configured
+2. You can run basic investigations
+3. You have created and tested custom runbooks
+4. You understand how to extend runbooks for new scenarios
+5. You can successfully:
+   - Deploy problematic Kubernetes configurations
+   - Use HolmesGPT to analyze issues and get fixed YAML
+   - Apply the suggested YAML fixes
+   - Verify if the fixes worked
+   - Use HolmesGPT to debug any remaining issues
+6. You have completed all test scenarios:
+   - Fixed resource configuration issues
+   - Fixed memory leak issues
+   - Fixed liveness probe issues
+   - Fixed service endpoint issues
+   - Fixed security context issues
+   - Fixed pod affinity issues
+   - Fixed network policy issues
+7. You understand how to:
+   - Ask HolmesGPT for specific YAML fixes
+   - Interpret and apply the suggested configurations
+   - Verify the effectiveness of applied fixes
+   - Debug issues when fixes don't work as expected
