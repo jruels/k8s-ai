@@ -64,7 +64,7 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
    - Apply the fixed YAML suggested by HolmesGPT
    - Verify the fix worked, if not use HolmesGPT to debug further
 
-   **Scenario 2: Fixing Memory Leak Issues**
+   **Scenario 2: Fixing Excessive Memory Usage**
    - Deploy a pod with excessive memory usage
    - Ask HolmesGPT to analyze the pod and suggest appropriate memory limits based on nginx best practices
    - Apply the fixed YAML suggested by HolmesGPT

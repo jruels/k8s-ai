@@ -244,7 +244,7 @@ spec:
   restartPolicy: Always
 ```
 
-###### **Scenario 2: Fixing Memory Leak Issues**
+###### **Scenario 2: Fixing Excessive Memory Usage**
 
 Deploy a pod with excessive memory usage:
 ```bash
