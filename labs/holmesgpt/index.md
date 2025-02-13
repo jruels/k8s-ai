@@ -58,74 +58,47 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
 
 4. Complete the following test scenarios:
 
-   **Scenario 1: Resource Configuration Issues**
+   **Scenario 1: Fixing Resource Configuration Issues**
    - Deploy a pod with excessive resource requests
-   - Use HolmesGPT to analyze and fix the configuration
+   - Ask HolmesGPT to analyze the resource configuration and provide a fixed YAML
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
 
-   **Scenario 2: Memory Leak Issues**
+   **Scenario 2: Fixing Memory Leak Issues**
    - Deploy a pod with potential memory leak
-   - Add proper resource limits and monitoring
+   - Ask HolmesGPT to analyze the pod and provide a fixed YAML with proper resource limits
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
 
-   **Scenario 3: Liveness Probe Issues**
+   **Scenario 3: Fixing Liveness Probe Issues**
    - Deploy a pod with problematic liveness probe
-   - Fix probe configuration and add readiness probe
+   - Ask HolmesGPT to analyze the probe configuration and provide a fixed YAML
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
 
-   **Scenario 4: Service Endpoint Issues**
+   **Scenario 4: Fixing Service Endpoint Issues**
    - Deploy a service with missing endpoints
-   - Fix service and deployment configuration
+   - Ask HolmesGPT to analyze the service and provide a fixed YAML including necessary deployment
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
 
-   **Scenario 5: Security Context Issues**
+   **Scenario 5: Fixing Security Context Issues**
    - Deploy a pod with security issues
-   - Implement security best practices
+   - Ask HolmesGPT to analyze the security context and provide a fixed YAML following best practices
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
 
-   **Scenario 6: Pod Affinity Issues**
+   **Scenario 6: Fixing Pod Affinity Issues**
    - Deploy pods with problematic affinity rules
-   - Fix node affinity configuration
+   - Ask HolmesGPT to analyze the affinity rules and provide a fixed YAML
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
 
-   **Scenario 7: Network Policy Issues**
+   **Scenario 7: Fixing Network Policy Issues**
    - Deploy a problematic network policy
-   - Configure appropriate traffic rules
-
-5. Using HolmesGPT for Complex Analysis
-
-   **Security Analysis**
-   - Check for security vulnerabilities
-   - Analyze network policies
-   - Check RBAC configuration
-
-   **Performance Investigation**
-   - Analyze resource utilization
-   - Check node status
-   - Review scaling patterns
-
-   **Configuration Audit**
-   - Check for best practices
-   - Analyze resource quotas
-   - Review storage configuration
-
-6. Troubleshooting Common Issues
-
-   **Investigating CrashLoopBackOff**
-   - Get detailed analysis of crashing pods
-   - Check container logs
-
-   **Network Connectivity Issues**
-   - Test service connectivity
-   - Check DNS resolution
-
-   **Resource Constraints**
-   - Analyze node pressure
-   - Check pod evictions
-
-7. Integration with Other Tools
-
-   **Using with kubectl**
-   - Analyze pod lists
-   - Review cluster events
-
-   **Using with Logs**
-   - Analyze application logs
-   - Review system logs
+   - Ask HolmesGPT to analyze the policy and provide a fixed YAML that allows essential traffic
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
 
 ### Part 3: Custom Runbooks with AlertManager
 
@@ -159,3 +132,22 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
 2. You can run basic investigations
 3. You have created and tested custom runbooks
 4. You understand how to extend runbooks for new scenarios
+5. You can successfully:
+   - Deploy problematic Kubernetes configurations
+   - Use HolmesGPT to analyze issues and get fixed YAML
+   - Apply the suggested YAML fixes
+   - Verify if the fixes worked
+   - Use HolmesGPT to debug any remaining issues
+6. You have completed all test scenarios:
+   - Fixed resource configuration issues
+   - Fixed memory leak issues
+   - Fixed liveness probe issues
+   - Fixed service endpoint issues
+   - Fixed security context issues
+   - Fixed pod affinity issues
+   - Fixed network policy issues
+7. You understand how to:
+   - Ask HolmesGPT for specific YAML fixes
+   - Interpret and apply the suggested configurations
+   - Verify the effectiveness of applied fixes
+   - Debug issues when fixes don't work as expected
