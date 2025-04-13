@@ -56,6 +56,50 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
    - Check exposed services
    - Investigate specific resources
 
+4. Complete the following test scenarios:
+
+   **Scenario 1: Fixing Resource Configuration Issues**
+   - Deploy a pod with excessive resource requests
+   - Ask HolmesGPT to analyze the resource configuration and provide a fixed YAML
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
+
+   **Scenario 2: Fixing Excessive Memory Usage**
+   - Deploy a pod with excessive memory usage
+   - Ask HolmesGPT to analyze the pod and suggest appropriate memory limits based on nginx best practices
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
+
+   **Scenario 3: Fixing Liveness Probe Issues**
+   - Deploy a pod with a liveness probe checking a nonexistent path (/nonexistent) every 3 seconds
+   - Ask HolmesGPT to analyze the probe configuration and provide a fixed YAML following best practices
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
+
+   **Scenario 4: Fixing Service Endpoint Issues**
+   - Deploy a service with missing endpoints
+   - Ask HolmesGPT to analyze the service and provide a fixed YAML including necessary deployment
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
+
+   **Scenario 5: Fixing Security Context Issues**
+   - Deploy a pod with privileged mode enabled and running as root
+   - Ask HolmesGPT to analyze the security context and provide a fixed YAML following best practices
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
+
+   **Scenario 6: Fixing Pod Affinity Issues**
+   - Deploy a pod with nodeAffinity requiring a nonexistent label (nonexistent-label=nonexistent-value)
+   - Ask HolmesGPT to analyze the affinity rules and provide a fixed YAML following best practices
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
+
+   **Scenario 7: Fixing Network Policy Issues**
+   - Deploy a restrictive network policy that blocks all ingress and egress traffic
+   - Ask HolmesGPT to analyze the policy and provide a fixed YAML that allows essential traffic
+   - Apply the fixed YAML suggested by HolmesGPT
+   - Verify the fix worked, if not use HolmesGPT to debug further
+
 ### Part 3: Custom Runbooks with AlertManager
 
 1. Set up monitoring infrastructure
@@ -88,3 +132,22 @@ For detailed documentation, see: https://github.com/robusta-dev/holmesgpt
 2. You can run basic investigations
 3. You have created and tested custom runbooks
 4. You understand how to extend runbooks for new scenarios
+5. You can successfully:
+   - Deploy problematic Kubernetes configurations
+   - Use HolmesGPT to analyze issues and get fixed YAML
+   - Apply the suggested YAML fixes
+   - Verify if the fixes worked
+   - Use HolmesGPT to debug any remaining issues
+6. You have completed all test scenarios:
+   - Fixed resource configuration issues
+   - Fixed memory leak issues
+   - Fixed liveness probe issues
+   - Fixed service endpoint issues
+   - Fixed security context issues
+   - Fixed pod affinity issues
+   - Fixed network policy issues
+7. You understand how to:
+   - Ask HolmesGPT for specific YAML fixes
+   - Interpret and apply the suggested configurations
+   - Verify the effectiveness of applied fixes
+   - Debug issues when fixes don't work as expected
