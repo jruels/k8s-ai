@@ -4,14 +4,14 @@
 
 Start minikube with 6GB memory:
 ```bash
-minikube start --memory=6144
+minikube start --memory=5120
 ```
 
 If minikube is already running, you can update its resources:
 ```bash
 minikube stop
 minikube delete
-minikube start --memory=6144
+minikube start --memory=5120
 ```
 
 Note: If you have resources deployed from a previous lab, run `minikube delete` to start with a fresh cluster.
