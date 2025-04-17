@@ -16,6 +16,12 @@ minikube start --memory=5120
 
 Note: If you have resources deployed from a previous lab, run `minikube delete` to start with a fresh cluster.
 
+Install the metrics API
+
+```bash
+minikube addons enable metrics-server
+```
+
 #### Introduction
 
 ##### **Overview of the Lab Objectives**
