@@ -458,6 +458,7 @@ Both tools provide similar insights, but:
 Let's implement K8sGPT's suggested solutions for each issue:
 
 1. Fix the invalid image deployment:
+   
 ```bash
 # Update the deployment to use a valid nginx tag
 kubectl set image deployment/bad-image nginx=nginx:latest
