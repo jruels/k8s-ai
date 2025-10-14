@@ -108,7 +108,7 @@ k8sgpt version
 
 Configure OpenAI backend for CLI:
 ```bash
-k8sgpt auth add --backend openai --password <your-api-key> --model gpt-4o-mini
+k8sgpt auth add --backend openai --password <your-api-key> --model gpt-4.1-mini
 ```
 
 Verify configuration:
@@ -158,7 +158,7 @@ metadata:
 spec:
   ai:
     enabled: true
-    model: gpt-4o-mini
+    model: gpt-4.1-mini
     backend: openai
     secret:
       name: k8sgpt-sample-secret
