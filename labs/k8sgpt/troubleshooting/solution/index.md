@@ -196,6 +196,7 @@ kubectl create deployment bad-image --image=nginx:nonexistent
 ```
 
 Deploy a service without matching pods:
+
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -259,6 +260,7 @@ For example:
 ```
 
 The JSON output (`--output json`) provides more structured data:
+
 ```json
 {
   "provider": "openai",          // The AI backend being used
@@ -457,7 +459,7 @@ Both tools provide similar insights, but:
 
 Let's implement K8sGPT's suggested solutions for each issue:
 
-1. Fix the invalid image deployment:
+- Fix the invalid image deployment:
    
 ```bash
 # Update the deployment to use a valid nginx tag
@@ -467,7 +469,7 @@ kubectl set image deployment/bad-image nginx=nginx:latest
 k8sgpt analyze --filter Pod
 ```
 
-2. Fix the resource-heavy pod:
+- Fix the resource-heavy pod:
 
 ```bash
 # Since pod resource requests are immutable, we need to recreate the pod
@@ -631,7 +633,7 @@ kubectl expose deployment web --port=80
 k8sgpt analyze --filter NetworkPolicy
 
 # Get detailed explanation
-k8sgpt analyze --explain
+k8sgpt analyze --filter NetworkPolicy --explain
 ```
 
 ##### **Implementing the Fix**
