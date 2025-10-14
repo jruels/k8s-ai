@@ -159,7 +159,7 @@ metadata:
 spec:
   ai:
     enabled: true
-    model: gpt-4o-mini
+    model: gpt-4.1-mini
     backend: openai
     secret:
       name: k8sgpt-sample-secret
@@ -468,6 +468,7 @@ k8sgpt analyze --filter Pod
 ```
 
 2. Fix the resource-heavy pod:
+   
 ```bash
 # Since pod resource requests are immutable, we need to recreate the pod
 kubectl delete pod resource-heavy-pod
