@@ -468,7 +468,7 @@ k8sgpt analyze --filter Pod
 ```
 
 2. Fix the resource-heavy pod:
-   
+
 ```bash
 # Since pod resource requests are immutable, we need to recreate the pod
 kubectl delete pod resource-heavy-pod
@@ -494,6 +494,7 @@ k8sgpt analyze --filter Pod
 ```
 
 3. Fix the service with no endpoints:
+   
 ```bash
 # Create deployment for the service
 kubectl create deployment nonexistent --image=redis
