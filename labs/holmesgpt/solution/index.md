@@ -72,7 +72,7 @@ Create a values file for Helm configuration:
 cat <<EOF > holmes-values.yaml
 additionalEnvVars:
 - name: MODEL
-  value: gpt-4o
+  value: gpt-4.1-mini
 - name: OPENAI_API_KEY
   valueFrom:
     secretKeyRef:
@@ -139,7 +139,7 @@ sudo apt install -y pipx
 
 Install HolmesGPT using pipx:
 ```bash
-pipx install "https://github.com/robusta-dev/holmesgpt/archive/refs/tags/0.7.2.zip"
+pipx install holmesgpt
 ```
 
 Update your PATH:
@@ -153,10 +153,12 @@ source ~/.bashrc  # or restart your terminal
 You can either:
 
 1. Use the config file:
+   - Note that you do need the double quotes around your API key here
+   - 
 ```bash
 mkdir -p ~/.holmes
 cat <<EOF > ~/.holmes/config.yaml
-model: "gpt-4"
+model: "gpt-4.1-mini"
 api_key: "your-api-key-here"
 EOF
 ```
