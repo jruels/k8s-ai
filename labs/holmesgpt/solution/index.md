@@ -25,34 +25,10 @@ minikube addons enable metrics-server
 #### Introduction
 
 ##### **Overview of the Lab Objectives**
-- Install Helm and HolmesGPT
+- Install HolmesGPT
 - Configure different LLM backends
 - Test different investigation scenarios
 - Understand security and configuration options
-
-#### Installing Helm
-
-First, we need to install Helm. For Debian/Ubuntu systems:
-
-Download the installation script:
-```bash
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-```
-
-Make the script executable:
-```bash
-chmod 700 get_helm.sh
-```
-
-Run the installation script:
-```bash
-./get_helm.sh
-```
-
-Verify the installation:
-```bash
-helm version
-```
 
 ##### **Brief on HolmesGPT**
 - **HolmesGPT**: An AI-powered tool for investigating and resolving Kubernetes alerts
@@ -84,7 +60,7 @@ EOF
 ##### **Create Secret for API Key**
 ```bash
 kubectl create secret generic holmes-secret \
-  --from-literal=openai-key='your-openai-key-here'
+  --from-literal=openai-key=$OPENAI_TOKEN
 ```
 
 ##### **Add Helm Repository**
@@ -154,18 +130,18 @@ You can either:
 
 1. Use the config file:
    - Note that you do need the double quotes around your API key here
-   - 
+
 ```bash
 mkdir -p ~/.holmes
 cat <<EOF > ~/.holmes/config.yaml
 model: "gpt-4.1-mini"
-api_key: "your-api-key-here"
+api_key: "$OPENAI_TOKEN"
 EOF
 ```
 
 2. Or use the command line flag:
 ```bash
-holmes ask --api-key="your-openai-key" "what pods are unhealthy in my cluster?"
+holmes ask --api-key=$OPENAI_TOKEN "what pods are unhealthy in my cluster?"
 ```
 
 ##### **Basic Usage**
