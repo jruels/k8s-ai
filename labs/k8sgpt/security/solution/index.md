@@ -54,68 +54,6 @@ K8sGPT can be used in two ways:
 
 ##### **Install Required Tools**
 
-###### Install jq
-```bash
-# For Linux users (Debian/Ubuntu)
-sudo apt-get update && sudo apt-get install -y jq
-```
-
-###### Verify jq Installation
-```bash
-jq --version
-```
-
-##### **Install Helm**
-
-Download the installation script:
-```bash
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-```
-
-Make the script executable:
-```bash
-chmod 700 get_helm.sh
-```
-
-Run the installation script:
-```bash
-./get_helm.sh
-```
-
-Verify the installation:
-```bash
-helm version
-```
-
-#### Install K8sGPT (Both Methods)
-
-##### Install K8sGPT CLI
-
-Download the latest release:
-```bash
-curl -LO https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.3.48/k8sgpt_amd64.deb
-```
-
-Install the package:
-```bash
-sudo dpkg -i k8sgpt_amd64.deb
-```
-
-Verify installation:
-```bash
-k8sgpt version
-```
-
-Configure OpenAI backend for CLI:
-```bash
-k8sgpt auth add --backend openai --password <your-api-key> --model gpt-4.1-mini
-```
-
-Verify configuration:
-```bash
-k8sgpt auth list
-```
-
 ###### Install K8sGPT Operator
 
 Add the K8sGPT Helm repository:
