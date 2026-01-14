@@ -41,15 +41,7 @@ git submodule update --init --recursive
 
 ##### **Install kind**
 ```bash
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
-```
-
-```bash
-chmod +x ./kind
-```
-
-```bash
-sudo mv ./kind /usr/local/bin/kind
+ARCH=$(uname -m) && curl -Lo kind "https://kind.sigs.k8s.io/dl/v0.31.0/kind-linux-$([ "$ARCH" = x86_64 ] && echo amd64 || echo arm64)" && chmod +x kind && sudo mv kind /usr/local/bin/kind
 ```
 
 ##### **Verify kind Installation**
