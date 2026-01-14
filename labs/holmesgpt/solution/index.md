@@ -87,14 +87,17 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
-  name: resource-heavy-pod
+  name: resource-issues-pod
+  labels:
+    app: resource-issues
 spec:
   containers:
-  - name: memory-demo
+  - name: nginx
     image: nginx
     resources:
       requests:
-        memory: "1000Gi"
+        memory: "1000Gi"  # Intentionally excessive
+        cpu: "100"        # Intentionally excessive
 EOF
 ```
 
@@ -178,29 +181,9 @@ Debug networking issues:
 holmes ask "are there any networking issues between my services?"
 ```
 
-##### **Additional Test Scenarios**
 
 ###### **Scenario 1: Fixing Resource Configuration Issues**
 
-First, deploy a pod with resource configuration issues:
-```bash
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: resource-issues-pod
-  labels:
-    app: resource-issues
-spec:
-  containers:
-  - name: nginx
-    image: nginx
-    resources:
-      requests:
-        memory: "1000Gi"  # Intentionally excessive
-        cpu: "100"        # Intentionally excessive
-EOF
-```
 
 Now, let's use HolmesGPT to analyze and fix the issues:
 ```bash
@@ -228,6 +211,28 @@ spec:
   restartPolicy: Always
 ```
 
+
+Apply the fixed YAML suggested by HolmesGPT:
+```bash
+kubectl delete pod resource-issues-pod
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-issues-pod
+  labels:
+    app: resource-issues
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        memory: "512Mi"  # Reduced memory
+        cpu: "100m"      # Reduced CPU
+EOF
+```
+
 ###### **Scenario 2: Fixing Excessive Memory Usage**
 
 Deploy a pod with excessive memory usage:
@@ -245,19 +250,20 @@ spec:
     image: nginx
     resources:
       requests:
-        memory: "2Gi"
+        memory: "8Gi"
       limits:
-        memory: "4Gi"
+        memory: "16Gi"
 EOF
 ```
 
 Ask HolmesGPT to analyze the pod and suggest appropriate resource limits:
 ```bash
-holmes ask "analyze memory-heavy-pod and suggest appropriate memory limits based on nginx best practices. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
+holmes ask "analyze memory-heavy-pod and suggest a complete YAML manifest with appropriate memory limits based on nginx best practices. ONLY PROVIDE USER-CONFIGURABLE FIELDS"
 ```
 
 Apply the fixed YAML suggested by HolmesGPT:
 ```bash
+kubectl delete pod memory-heavy-pod
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
