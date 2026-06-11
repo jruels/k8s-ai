@@ -122,6 +122,8 @@ Activate Trivy:
 k8sgpt integration activate trivy
 ```
 
+**NOTE: It can take up to 5 minutes for the trivy reports to be generated**
+
 #### Security Analysis
 
 After activating Trivy integration:
