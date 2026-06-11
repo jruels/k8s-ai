@@ -152,8 +152,6 @@ Check for security misconfigurations:
 k8sgpt analyze --filter ConfigAuditReport
 ```
 
-Note: The initial scan may take a few minutes to complete after the Trivy operator is deployed.
-
 ### Part 2: Security Scenarios and Remediation
 
 #### Scenario 1: Privileged Container
