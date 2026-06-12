@@ -6,8 +6,10 @@
   from a copilot or an in-cluster agent
 - How to deploy the dot-ai server (with its Qdrant vector database) via Helm
 - How to drive it with the CLI: natural-language `query` and agentic `remediate`
-- How **manual vs. automatic** remediation works, and why gated execution is the
-  heart of safe agentic operations
+- How to run **both** remediation modes yourself — a **gated** fix you approve
+  (manual) and an **automatic** fix dot-ai executes within guardrails — and why
+  gated execution and threshold-bounded autonomy are the heart of safe agentic
+  operations
 - *Why* you would give a tool a goal instead of a command
 
 This is one of three labs on AI tooling for Kubernetes, and the most ambitious.
@@ -215,7 +217,7 @@ to an AI assistant over MCP.
 
 ---
 
-## Step 4 — Let it plan a fix: agentic remediation
+## Step 4 — Gated remediation: propose, then approve (manual mode)
 
 This is where dot-ai goes beyond the other tools. Ask it to remediate the issue in
 **manual mode** — it will investigate and *propose* a fix but **will not execute
@@ -231,50 +233,130 @@ dot-ai remediate \
 
 **Read the output closely — it is a window into how an agent actually works:**
 
-- **`investigation.dataGathered`** lists every step it took. In testing this was a
-  9-step investigation: multiple `kubectl_get` and `kubectl_describe` calls, and
-  even a **`kubectl_patch_dryrun`** — it validated its proposed change against the
-  API server *before* recommending it.
+- **`investigation.dataGathered`** lists every step it took: multiple `kubectl_get`
+  and `kubectl_describe` calls as it correlated cluster state to find the root cause.
 - **`remediation.actions`** contains the concrete fix it recommends — a
-  `kubectl patch` changing the image to `nginx:latest` — each action with a
-  `rationale` and a `risk` rating.
+  `kubectl patch` changing the image to a valid tag — each action with a `rationale`
+  and a `risk` rating.
 - **`message`** reports its confidence (e.g. *"identified the root cause with 98%
   confidence"*).
 - **`status: awaiting_user_approval`** — because you chose `manual` mode, it stops
-  here and waits. **Nothing in your cluster was changed.**
+  here and waits. **Nothing in your cluster was changed yet.**
+- **`sessionId`** (e.g. `rem-1781295837822-e5b5af93`) — copy this value. It is how you
+  approve *this specific investigation* in the next command.
 
-### Why manual mode matters
-
-dot-ai *can* run in `automatic` mode, where it applies fixes itself — but only when
-its confidence and the action's risk meet the thresholds you set:
-
-- `--confidenceThreshold 0.8` — only act if at least 80% confident
-- `--maxRiskLevel low` — never auto-execute anything riskier than "low"
-
-Manual mode is the safe default for learning, and a sound model for production: you
-keep a human in the loop for anything that *mutates* the cluster. This **"investigate
-→ validate (dry-run) → propose → gate execution"** pattern is the core discipline of
-agentic operations — the AI does the tedious investigation, but a human (or an
-explicit threshold) authorizes the change.
-
-### Apply the fix yourself (optional)
-
-If you want to complete the loop, run the `kubectl patch` command dot-ai printed,
-then confirm the Pod recovers:
+Confirm for yourself that nothing changed — the deployment is still broken:
 
 ```bash
-kubectl set image deployment/broken nginx=nginx:latest
-sleep 15
-dot-ai query "Is the broken deployment healthy now?"
+kubectl get deploy broken -o wide
 ```
+
+### Approve the fix and let dot-ai execute it
+
+Now give your approval by re-running `remediate` with the **`--executeChoice`** flag and
+the **`sessionId`** from the previous output. `--executeChoice 1` means "execute the
+proposed fix via the dot-ai server." Note that the two threshold flags are still required
+even when approving:
+
+```bash
+dot-ai remediate \
+  --issue "The broken deployment in the default namespace has a pod stuck in ImagePullBackOff" \
+  --mode manual \
+  --maxRiskLevel low \
+  --confidenceThreshold 0.8 \
+  --executeChoice 1 \
+  --sessionId "<paste-the-sessionId-here>"
+```
+
+This time the output shows `executed: true`, an `output: deployment.apps/broken patched`,
+and `status: success` — dot-ai ran the fix *after* you authorized it. Verify the recovery:
+
+```bash
+kubectl get deploy broken -o wide
+```
+
+```
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES         SELECTOR
+broken   1/1     1            1           4m47s   nginx        nginx:latest   app=broken
+```
+
+### Why this gated flow matters
+
+This is the **"investigate → validate → propose → *gate* → execute"** pattern — the core
+discipline of agentic operations. The AI did the tedious investigation and even wrote the
+exact command, but a human stayed in the loop and explicitly authorized the change before
+anything mutated the cluster. The `sessionId` ties your approval to the precise fix that
+was proposed, so you can never accidentally approve something other than what you reviewed.
+
+---
+
+## Step 5 — Automatic remediation: execute within guardrails (automatic mode)
+
+Sometimes you trust the AI to act on its own — for well-understood, low-risk fixes you
+don't want a human paged at 3 a.m. just to click "approve." That is what **`automatic`
+mode** is for: dot-ai executes the fix *itself*, but **only when its confidence and the
+action's risk fall inside the thresholds you set**.
+
+First, re-break the deployment so there's something to fix:
+
+```bash
+kubectl set image deployment/broken nginx=nginx:doesnotexist
+```
+
+Confirm it's failing again, then run `remediate` in `automatic` mode:
+
+```bash
+dot-ai remediate \
+  --issue "The broken deployment in the default namespace has a pod stuck in ImagePullBackOff" \
+  --mode automatic \
+  --maxRiskLevel low \
+  --confidenceThreshold 0.8
+```
+
+This time there is **no approval step**. Because the fix is rated `risk: low` and dot-ai's
+confidence (≈0.99) clears your `0.8` threshold, it executes immediately. In the output
+you'll see:
+
+- `executed: true` and an `executedCommands` list
+- the action result `output: deployment.apps/broken patched`, `success: true`
+- a `validation` block where dot-ai **re-checked the cluster after acting** to confirm the
+  pod actually recovered
+- `status: success`
+
+Verify:
+
+```bash
+kubectl get deploy broken -o wide
+```
+
+```
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES         SELECTOR
+broken   1/1     1            1           82s   nginx        nginx:latest   app=broken
+```
+
+### The thresholds *are* the guardrail
+
+The two flags are not decoration — they are what makes autonomous action safe:
+
+- `--confidenceThreshold 0.8` — dot-ai acts only if it is at least 80% confident in its
+  diagnosis. Below that, it backs off rather than guessing.
+- `--maxRiskLevel low` — it will auto-execute `low`-risk actions, but anything it rates
+  `medium` or `high` is **held for human approval** instead of run automatically.
+
+Try tightening them to feel the gate: re-break the deployment and run automatic mode again
+with `--maxRiskLevel` unchanged but imagine a riskier action (say, deleting a resource) —
+dot-ai would refuse to auto-execute it and fall back to proposing. **The model investigates
+and proposes the same way in both modes; the thresholds decide whether a human or a number
+authorizes the change.** Choosing those numbers wisely is the real skill of running agentic
+remediation in production.
 
 ---
 
 ## Reflect
 
-- dot-ai treated your request as a *goal* and owned the whole loop, including a
-  dry-run before proposing a change. How is that a different relationship with a
-  tool than "show me the pods"?
+- dot-ai treated your request as a *goal* and owned the whole loop — investigating,
+  proposing the exact command, and (in automatic mode) executing and then validating
+  the result. How is that a different relationship with a tool than "show me the pods"?
 - The platform indexes your cluster's capabilities into a vector database. Why does
   grounding recommendations in *your* cluster's real capabilities beat generic
   advice?
@@ -320,6 +402,10 @@ takeaways:
    grounded in your cluster's actual capabilities (indexed in a vector database).
 2. Its CLI is the headless twin of the MCP server an AI assistant would drive — the
    same brain, different client.
-3. **Gated remediation** (`manual` mode, confidence and risk thresholds) is the key
-   safety pattern: let the AI investigate and propose, but keep a human in the loop
-   before anything changes your cluster.
+3. You ran remediation in **both modes**: a **gated** fix (`manual` mode) that you
+   approved with `--executeChoice`/`--sessionId`, and an **automatic** fix dot-ai
+   executed itself once its confidence and the action's risk were inside your
+   thresholds.
+4. **Gated execution and threshold-bounded autonomy** are the key safety patterns:
+   the AI investigates and proposes the same way either way, but a human — or an
+   explicit confidence/risk threshold — authorizes anything that changes the cluster.
