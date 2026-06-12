@@ -1,8 +1,5 @@
 # Lab: kagent — AI Agents That Live Inside Your Cluster
 
-> Every command in this lab was tested end-to-end on the class instructor node
-> (minikube, Kubernetes v1.35.1) on 2026-06-11 using an OpenAI API key.
-
 ## What you will learn
 
 - What `kagent` is and why "agents as Kubernetes resources" is a meaningfully
@@ -141,11 +138,11 @@ components come up:
 kubectl get pods -n kagent
 ```
 
-> **You may briefly see `kagent-controller` in `CrashLoopBackOff`.** This is
-> *expected* and is a nice real-world teaching moment: the controller starts before
-> the PostgreSQL database is ready and keeps restarting until the database accepts
-> connections. Give it a minute and it settles to `Running`. (Startup ordering like
-> this is exactly the kind of thing you could later ask an agent to explain.)
+**You may briefly see `kagent-controller` in `CrashLoopBackOff`.** This is
+*expected* and is a nice real-world teaching moment: the controller starts before
+the PostgreSQL database is ready and keeps restarting until the database accepts
+connections. Give it a minute and it settles to `Running`. (Startup ordering like
+this is exactly the kind of thing you could later ask an agent to explain.)
 
 ---
 
@@ -166,11 +163,11 @@ it is an ordinary, declarative Kubernetes object:
 kubectl get agent k8s-agent -n kagent -o yaml | head -40
 ```
 
-> **Why this matters:** because an agent is a CRD, everything you already know about
-> managing Kubernetes objects applies to your AI. You can store agents in Git,
-> review changes in a pull request, apply them with `kubectl apply`, and let the
-> kagent controller reconcile them. Your AI capabilities become part of your
-> platform's desired state.
+**Why this matters:** because an agent is a CRD, everything you already know about
+managing Kubernetes objects applies to your AI. You can store agents in Git,
+review changes in a pull request, apply them with `kubectl apply`, and let the
+kagent controller reconcile them. Your AI capabilities become part of your
+platform's desired state.
 
 ---
 
@@ -224,13 +221,13 @@ you will see the agent autonomously decide to call its tools, one after another:
 `--stream` flag to watch these steps arrive one event at a time as the agent works —
 useful for long investigations, though still JSON.)
 
-> **Why return all that JSON?** kagent is built for automation and auditing, not just
-> human chat. The full structured record lets another system consume the result
-> programmatically and lets a human audit exactly which tools the agent ran and what
-> each returned — which is why you reach for `jq` (or the dashboard, below) when you
-> just want the human answer. Under the hood this is the same investigative loop
-> kubectl-ai runs — *call a read-only tool, look at the output, decide what to do
-> next* — but here it runs inside a shared, recorded, in-cluster service.
+**Why return all that JSON?** kagent is built for automation and auditing, not just
+human chat. The full structured record lets another system consume the result
+programmatically and lets a human audit exactly which tools the agent ran and what
+each returned — which is why you reach for `jq` (or the dashboard, below) when you
+just want the human answer. Under the hood this is the same investigative loop
+kubectl-ai runs — *call a read-only tool, look at the output, decide what to do
+next* — but here it runs inside a shared, recorded, in-cluster service.
 
 ---
 

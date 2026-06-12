@@ -116,21 +116,21 @@ helm upgrade --install dot-ai \
   --timeout 6m --wait
 ```
 
-> **Why `--wait` and a 6-minute timeout?** The server image is large and Qdrant
-> needs a persistent volume, so the first install can take a few minutes. `--wait`
-> tells Helm to block until every component is actually `Running` and the server's
-> health check passes — so when the command returns, you know it is ready.
+**Why `--wait` and a 6-minute timeout?** The server image is large and Qdrant
+needs a persistent volume, so the first install can take a few minutes. `--wait`
+tells Helm to block until every component is actually `Running` and the server's
+health check passes — so when the command returns, you know it is ready.
 
-> **Why `ai.provider=openai`?** dot-ai defaults to Anthropic. These two `--set`
-> flags (`ai.provider` and `ai.model`) plus the matching `secrets.*.apiKey` are all
-> that change to use a different LLM backend.
+**Why `ai.provider=openai`?** dot-ai defaults to Anthropic. These two `--set`
+flags (`ai.provider` and `ai.model`) plus the matching `secrets.*.apiKey` are all
+that change to use a different LLM backend.
 
-> **Production note on secrets.** Passing the key with `--set secrets.openai.apiKey=...`
-> is fine for this lab and matches the upstream docs, but the value then lands in your
-> shell history and in `helm get values dot-ai -n dot-ai`. In production, pre-create the
-> Kubernetes Secret yourself (or use sealed-secrets / an external-secrets operator) and
-> point the chart at it via `secrets.name`, rather than passing the raw key on the
-> command line.
+**Production note on secrets.** Passing the key with `--set secrets.openai.apiKey=...`
+is fine for this lab and matches the upstream docs, but the value then lands in your
+shell history and in `helm get values dot-ai -n dot-ai`. In production, pre-create the
+Kubernetes Secret yourself (or use sealed-secrets / an external-secrets operator) and
+point the chart at it via `secrets.name`, rather than passing the raw key on the
+command line.
 
 Confirm the three components are up:
 
@@ -140,10 +140,10 @@ kubectl get pods -n dot-ai
 
 You want `dot-ai`, `dot-ai-agentic-tools`, and `dot-ai-qdrant-0` all `Running`.
 
-> **What are these three Pods?** `dot-ai` is the MCP/REST server (the brain),
-> `dot-ai-agentic-tools` is the sandbox where it executes `kubectl`/`helm` tool
-> calls, and `dot-ai-qdrant-0` is the vector database holding its semantic memory of
-> your cluster.
+**What are these three Pods?** `dot-ai` is the MCP/REST server (the brain),
+`dot-ai-agentic-tools` is the sandbox where it executes `kubectl`/`helm` tool
+calls, and `dot-ai-qdrant-0` is the vector database holding its semantic memory of
+your cluster.
 
 ---
 
@@ -179,18 +179,18 @@ dot-ai version
 You should see `status: success` and a list of platform capabilities such as
 `ai-recommendations`, `semantic-search`, and `capability-scanning`.
 
-> **Why config for the URL but an env var for the token?** `dot-ai config set` persists
-> non-secret settings (server URL, output format) so you don't retype them every session —
-> run `dot-ai config list` to see them. The **token is a secret**, so dot-ai deliberately
-> does *not* offer a config key for it; you supply it via the `DOT_AI_AUTH_TOKEN`
-> environment variable (or a `--token` flag) instead, keeping the secret off disk. A flag
-> or env var always overrides the persisted config.
+**Why config for the URL but an env var for the token?** `dot-ai config set` persists
+non-secret settings (server URL, output format) so you don't retype them every session —
+run `dot-ai config list` to see them. The **token is a secret**, so dot-ai deliberately
+does *not* offer a config key for it; you supply it via the `DOT_AI_AUTH_TOKEN`
+environment variable (or a `--token` flag) instead, keeping the secret off disk. A flag
+or env var always overrides the persisted config.
 
-> **Why a separate server and CLI?** This split is the whole point of dot-ai's
-> design: the *server* is a long-lived, shared brain (the same one an AI assistant
-> would connect to over MCP), and the *CLI* is just one of several possible clients.
-> In production you would expose the server through an Ingress and point many clients
-> at it; in this lab a port-forward is the simplest equivalent.
+**Why a separate server and CLI?** This split is the whole point of dot-ai's
+design: the *server* is a long-lived, shared brain (the same one an AI assistant
+would connect to over MCP), and the *CLI* is just one of several possible clients.
+In production you would expose the server through an Ingress and point many clients
+at it; in this lab a port-forward is the simplest equivalent.
 
 ---
 
@@ -208,10 +208,10 @@ In the `result` you will see `toolsUsed: [kubectl_get, kubectl_describe]` and a
 missing `nginx:doesnotexist` image. Note the `iterations` count — the platform ran
 several tool-calling rounds before it was confident enough to answer.
 
-> This is the same read-tools-in-a-loop pattern you saw with kubectl-ai and kagent.
-> What differs is everything *around* it: the loop runs on a shared server, grounded
-> by the cluster-capability index in Qdrant, and is exposed the same way to a CLI or
-> to an AI assistant over MCP.
+This is the same read-tools-in-a-loop pattern you saw with kubectl-ai and kagent.
+What differs is everything *around* it: the loop runs on a shared server, grounded
+by the cluster-capability index in Qdrant, and is exposed the same way to a CLI or
+to an AI assistant over MCP.
 
 ---
 

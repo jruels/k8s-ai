@@ -1,11 +1,5 @@
 ### Part 1: Installing HolmesGPT with Helm
 
-> **Updated lab** (tested 2026-06-11). Differences from the original:
-> 1. Adds an explicit `export OPENAI_TOKEN=...` step — the original relied on it being
->    set from an earlier lab, so following Lab 4 alone in a fresh shell produced an empty
->    API key and every `holmes ask` failed with an auth error.
-> 2. Adds a note that two `AlreadyExists` errors during the Part 3 kube-prometheus install
->    are expected and harmless.
 
 #### Prerequisites
 
@@ -50,10 +44,6 @@ minikube addons enable metrics-server
 
 ##### **Set your OpenAI API key**
 
-> **Important (new step):** Export your key in this shell *before* creating the secret or
-> config file below. Both the Helm secret and the `holmes` CLI config reference
-> `$OPENAI_TOKEN`; if it is unset they will be created empty and every query will fail with
-> an authentication error.
 
 ```bash
 export OPENAI_TOKEN="<your-openai-api-key>"
@@ -64,8 +54,6 @@ Verify it is set (you should see your key, not a blank line):
 echo "$OPENAI_TOKEN"
 ```
 
-> Tip: because `export` only affects the current shell, re-run it if you open a new
-> terminal or reconnect over SSH during this lab.
 
 ##### **Create Configuration File**
 
@@ -153,9 +141,6 @@ pipx ensurepath
 source ~/.bashrc  # or restart your terminal
 ```
 
-> If `holmes` is still "command not found" after this, the binary lives in
-> `~/.local/bin`; either re-run `source ~/.bashrc` or use the full path
-> `~/.local/bin/holmes`.
 
 ##### **Configure HolmesGPT**
 
@@ -619,19 +604,23 @@ kubectl create -f manifests/setup
 kubectl create -f manifests/
 ```
 
-> **Expected, harmless errors:** Because you enabled the `metrics-server` addon in the
-> prereqs, it already owns the `v1beta1.metrics.k8s.io` APIService. When you run
-> `kubectl create -f manifests/`, the bundled `prometheus-adapter` tries to claim the same
-> APIService and you will see two `AlreadyExists` errors:
->
-> ```
-> Error from server (AlreadyExists): ... apiservices ... "v1beta1.metrics.k8s.io" already exists
-> Error from server (AlreadyExists): ... clusterroles ... "system:aggregated-metrics-reader" already exists
-> ```
->
-> These are safe to ignore — Prometheus and AlertManager (which is all this part of the lab
-> needs) still install and run correctly. You can confirm with
-> `kubectl get pods -n monitoring`.
+---
+
+Expected, harmless errors: Because you enabled the `metrics-server` addon in the
+prereqs, it already owns the `v1beta1.metrics.k8s.io` APIService. When you run
+`kubectl create -f manifests/`, the bundled `prometheus-adapter` tries to claim the same
+APIService and you will see two `AlreadyExists` errors:
+
+```
+Error from server (AlreadyExists): ... apiservices ... "v1beta1.metrics.k8s.io" already exists
+Error from server (AlreadyExists): ... clusterroles ... "system:aggregated-metrics-reader" already exists
+```
+
+These are safe to ignore — Prometheus and AlertManager (which is all this part of the lab
+needs) still install and run correctly. You can confirm with
+`kubectl get pods -n monitoring`.
+
+---
 
 #### Deploy Test Application
 ```bash
@@ -693,10 +682,10 @@ First, set up port forwarding for AlertManager:
 kubectl port-forward -n monitoring svc/alertmanager-main 9093:9093
 ```
 
-> **Note:** AlertManager is created by the Prometheus operator a short while after
-> `kubectl create -f manifests/`. If `port-forward` reports "no resources" or the service
-> isn't found yet, wait ~1 minute and confirm with
-> `kubectl get pods -n monitoring | grep alertmanager` before retrying.
+**Note:** AlertManager is created by the Prometheus operator a short while after
+`kubectl create -f manifests/`. If `port-forward` reports "no resources" or the service
+isn't found yet, wait ~1 minute and confirm with
+`kubectl get pods -n monitoring | grep alertmanager` before retrying.
 
 Now, open a new terminal and let's see what issues Holmes identifies:
 ```bash
@@ -704,12 +693,12 @@ Now, open a new terminal and let's see what issues Holmes identifies:
 holmes investigate alertmanager --alertmanager-url http://localhost:9093
 ```
 
-> **Note:** When the cluster is freshly created, the only alert that fires immediately is
-> the built-in `Watchdog` heartbeat. Workload alerts such as `KubePodCrashLooping` and
-> `KubeDeploymentRolloutStuck` only fire after their `for:` duration elapses (often
-> 10–15 minutes). Give the cluster time, or deploy a broken workload (e.g.
-> `kubectl create deployment bad-image --image=nginx:nonexistent`) and wait, to see more
-> alerts to investigate.
+**Note:** When the cluster is freshly created, the only alert that fires immediately is
+the built-in `Watchdog` heartbeat. Workload alerts such as `KubePodCrashLooping` and
+`KubeDeploymentRolloutStuck` only fire after their `for:` duration elapses (often
+10–15 minutes). Give the cluster time, or deploy a broken workload (e.g.
+`kubectl create deployment bad-image --image=nginx:nonexistent`) and wait, to see more
+alerts to investigate.
 
 You'll see several issues like "KubePodCrashLooping", "KubeDeploymentRolloutStuck", etc. Let's create a runbook for a couple of these:
 

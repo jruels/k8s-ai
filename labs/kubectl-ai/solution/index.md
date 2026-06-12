@@ -123,9 +123,9 @@ Verify it:
 kubectl-ai version
 ```
 
-> **A note on providers.** kubectl-ai defaults to Google Gemini. Because this class
-> uses an OpenAI key, the very next step points kubectl-ai at OpenAI — *once*, in a
-> config file — so you don't have to repeat provider/model flags on every command.
+**A note on providers.** kubectl-ai defaults to Google Gemini. Because this class
+uses an OpenAI key, the very next step points kubectl-ai at OpenAI — *once*, in a
+config file — so you don't have to repeat provider/model flags on every command.
 
 ---
 
@@ -150,13 +150,13 @@ will answer using OpenAI:
 kubectl-ai --quiet "what deployments are in the default namespace?"
 ```
 
-> **Config vs. flags — you can use either.** The config file sets your *defaults*, which
-> is why the rest of this lab uses plain `kubectl-ai "..."`. You can still pass
-> `--llm-provider` and `--model` on any command for a one-off, and a flag always wins
-> over the config file — e.g. `kubectl-ai --model=gpt-4.1-mini --quiet "..."` uses a
-> cheaper model just for that call. Two things the config file does **not** hold: your
-> **API key** (that stays in the `OPENAI_API_KEY` environment variable you exported) and
-> your kubeconfig (kubectl-ai uses your normal `kubectl` context).
+**Config vs. flags — you can use either.** The config file sets your *defaults*, which
+is why the rest of this lab uses plain `kubectl-ai "..."`. You can still pass
+`--llm-provider` and `--model` on any command for a one-off, and a flag always wins
+over the config file — e.g. `kubectl-ai --model=gpt-4.1-mini --quiet "..."` uses a
+cheaper model just for that call. Two things the config file does **not** hold: your
+**API key** (that stays in the `OPENAI_API_KEY` environment variable you exported) and
+your kubeconfig (kubectl-ai uses your normal `kubectl` context).
 
 ---
 
@@ -179,12 +179,12 @@ kubectl-ai --quiet \
 …and then summarizes the result in English, calling out that `broken-…` is in
 `ErrImagePull`/`ImagePullBackOff` while `nginx-…` is `Running`.
 
-> **Why does it show you the command?** This is the single most important habit to
-> notice. The AI is not a black box that "just knows" your cluster — it decided that
-> the way to answer your question was to run `kubectl get pods`, exactly as you
-> would have. By surfacing that command, kubectl-ai keeps you in the loop, lets you
-> sanity-check its reasoning, and quietly teaches you the `kubectl` you might not
-> have known. **Never trust output you cannot trace back to a command.**
+**Why does it show you the command?** This is the single most important habit to
+notice. The AI is not a black box that "just knows" your cluster — it decided that
+the way to answer your question was to run `kubectl get pods`, exactly as you
+would have. By surfacing that command, kubectl-ai keeps you in the loop, lets you
+sanity-check its reasoning, and quietly teaches you the `kubectl` you might not
+have known. **Never trust output you cannot trace back to a command.**
 
 ---
 
@@ -246,10 +246,10 @@ Try a sequence like:
 
 Type `exit` (or press `Ctrl+C`) to leave the session.
 
-> **Why interactive mode?** Real troubleshooting is a conversation, not a single
-> question. Interactive mode lets the model build on what it already discovered, so
-> you do not have to re-state context each time. This is the same multi-turn loop
-> the other two tools automate more heavily.
+**Why interactive mode?** Real troubleshooting is a conversation, not a single
+question. Interactive mode lets the model build on what it already discovered, so
+you do not have to re-state context each time. This is the same multi-turn loop
+the other two tools automate more heavily.
 
 ---
 
