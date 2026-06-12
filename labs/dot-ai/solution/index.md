@@ -10,6 +10,9 @@
   (manual) and an **automatic** fix dot-ai executes within guardrails — and why
   gated execution and threshold-bounded autonomy are the heart of safe agentic
   operations
+- How to make dot-ai **always-on** with the dot-ai-controller: a `RemediationPolicy`
+  that watches cluster events and remediates them automatically, with no human
+  running a command
 - *Why* you would give a tool a goal instead of a command
 
 This is one of three labs on AI tooling for Kubernetes, and the most ambitious.
@@ -352,6 +355,167 @@ remediation in production.
 
 ---
 
+## Step 6 — Always-on remediation: the dot-ai operator
+
+So far *you* started every remediation by running a command. But the most powerful way to
+run dot-ai is to **not run it at all** — to have it watch the cluster and act on problems
+the moment they appear, with no human triggering it. That is what the **dot-ai-controller**
+does: it is a Kubernetes operator that watches cluster **events** and calls the dot-ai
+server's `remediate` endpoint automatically when an event matches a policy you define.
+
+This is the same "on-demand tool → always-on operator" pattern as the **Holmes Operator**
+lab. The unit of configuration is a **`RemediationPolicy`** Custom Resource: you declare
+*which events* to watch and *how* to respond (the same `manual`/`automatic` modes and
+`confidence`/`risk` thresholds you just used), and the controller does the rest 24/7.
+
+> The dot-ai server you deployed in Steps 1–2 must be healthy for this to work — the
+> controller calls it. You do **not** need the port-forward here: the controller talks to
+> the dot-ai Service *inside* the cluster.
+
+### Install the controller
+
+```bash
+helm install dot-ai-controller \
+  oci://ghcr.io/vfarcic/dot-ai-controller/charts/dot-ai-controller \
+  --namespace dot-ai \
+  --wait --timeout 5m
+```
+
+Confirm the controller is running and that it registered its CRDs:
+
+```bash
+kubectl get pods -n dot-ai | grep controller
+kubectl get crd | grep devopstoolkit
+```
+
+You should see a `dot-ai-controller-manager-…` pod `Running` and a
+`remediationpolicies.dot-ai.devopstoolkit.live` CRD, among others.
+
+### Create a RemediationPolicy
+
+This policy watches for the `Warning`/`Failed` Pod events that an `ImagePullBackOff`
+produces in the `default` namespace, and remediates them **automatically** — but only
+within the same guardrails you used by hand: at least 80% confidence and no action riskier
+than `low`.
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: dot-ai.devopstoolkit.live/v1alpha1
+kind: RemediationPolicy
+metadata:
+  name: auto-remediate-imagepull
+  namespace: dot-ai
+spec:
+  # Where to send the remediation request — the in-cluster dot-ai Service
+  mcpEndpoint: http://dot-ai.dot-ai.svc.cluster.local:3456/api/v1/tools/remediate
+  mcpAuthSecretRef:
+    name: dot-ai-secrets
+    key: auth-token
+  mode: automatic
+  confidenceThreshold: 0.8
+  maxRiskLevel: low
+  eventSelectors:
+    - type: Warning
+      reason: Failed
+      involvedObjectKind: Pod
+      namespace: default
+  rateLimiting:
+    cooldownMinutes: 1
+    eventsPerMinute: 10
+EOF
+```
+
+Confirm the policy is accepted and ready:
+
+```bash
+kubectl get remediationpolicy -n dot-ai
+```
+
+```
+NAME                       READY   EVENTS   SUCCESSFUL   FAILED   MODE        AGE
+auto-remediate-imagepull   True                                   automatic   0s
+```
+
+### Trigger it — break something and walk away
+
+Now re-introduce a fault. **You will not run any dot-ai command** — the controller will
+notice the resulting event and act on its own:
+
+```bash
+kubectl set image deployment/broken nginx=nginx:doesnotexist
+```
+
+Watch the controller catch the event and call dot-ai. Follow its logs:
+
+```bash
+kubectl logs -n dot-ai deploy/dot-ai-controller-manager -f
+```
+
+Within a few seconds you'll see it match the event and fire a request (press `Ctrl+C` to
+stop following):
+
+```
+🎯 Event MATCHES RemediationPolicy!   ... eventReason":"Failed" ... effectiveMode":"automatic"
+🚀 Generated MCP request   ... "issue":"Pod broken-… has a Failed event: Error: ImagePullBackOff","mode":"automatic","confidenceThreshold":0.8,"maxRiskLevel":"low"
+🌐 Sending HTTP request   ... POST .../api/v1/tools/remediate
+```
+
+The `remediate` investigation takes roughly a minute. When it returns, the log shows the
+fix was executed automatically:
+
+```
+📡 HTTP response received   ... statusCode":200
+🎉 MCP request successful   ... "Issue successfully resolved. Executed 1 remediation actions and validated the fix."
+✅ Event processed successfully - MCP request sent and remediation successful
+```
+
+### Verify the operator fixed it
+
+The policy's counters increment, and the deployment recovers — **without you ever running
+`dot-ai`**:
+
+```bash
+kubectl get remediationpolicy -n dot-ai -o wide
+```
+
+```
+NAME                       READY   EVENTS   SUCCESSFUL   FAILED   MODE        ...
+auto-remediate-imagepull   True    1        1                     automatic   ...
+```
+
+```bash
+kubectl get deploy broken -o wide
+```
+
+```
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES         SELECTOR
+broken   1/1     1            1           3m18s   nginx        nginx:latest   app=broken
+```
+
+### What just happened — and the safety knobs
+
+An event in the cluster, not a human, started the whole loop. The controller turned that
+event into a `remediate` call carrying *your* policy's mode and thresholds, dot-ai
+investigated and patched the image, and the controller recorded the outcome on the policy's
+status. A few things worth knowing for real use:
+
+- **Thresholds still gate it.** `confidenceThreshold` and `maxRiskLevel` work exactly as in
+  Step 5. Set `mode: manual` instead and the controller will *propose* and (with a
+  `notifications.slack` block) post the recommendation to Slack for a human to run — the
+  event-driven equivalent of the gated flow.
+- **Rate limiting prevents event storms.** A crashing pod can emit the same event many
+  times a second. `rateLimiting` plus a per-object **cooldown** (a few minutes) stop the
+  controller from firing a flood of expensive LLM calls for one broken object.
+- **Per-selector overrides.** Each entry in `eventSelectors` can carry its own `mode`,
+  `confidenceThreshold`, and `maxRiskLevel`, so you can auto-fix safe, well-understood
+  failures while routing riskier ones to a human — all in one policy.
+
+> **Note:** because of the cooldown, re-breaking the *same* pod immediately won't trigger a
+> second remediation right away. Deploy a *new* broken workload, or wait out the cooldown,
+> to see it fire again.
+
+---
+
 ## Reflect
 
 - dot-ai treated your request as a *goal* and owned the whole loop — investigating,
@@ -378,9 +542,12 @@ dot-ai sits at the "agentic platform" end of a spectrum of AI Kubernetes tooling
 
 ## Cleanup
 
-Stop the port-forward (`Ctrl+C`), then remove dot-ai and the test workloads:
+Stop the port-forward (`Ctrl+C`), then remove the controller, dot-ai, and the test
+workloads:
 
 ```bash
+kubectl delete remediationpolicy --all -n dot-ai
+helm uninstall dot-ai-controller -n dot-ai
 helm uninstall dot-ai -n dot-ai
 kubectl delete namespace dot-ai
 kubectl delete deployment nginx broken
@@ -409,3 +576,6 @@ takeaways:
 4. **Gated execution and threshold-bounded autonomy** are the key safety patterns:
    the AI investigates and proposes the same way either way, but a human — or an
    explicit confidence/risk threshold — authorizes anything that changes the cluster.
+5. The **dot-ai-controller** turns the on-demand tool into an always-on operator: a
+   `RemediationPolicy` watches cluster events and remediates them automatically —
+   the same modes and thresholds, now triggered by the cluster instead of by you.
