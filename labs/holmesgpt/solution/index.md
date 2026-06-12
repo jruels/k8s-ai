@@ -170,6 +170,14 @@ Ask about cluster issues:
 holmes ask "what pods are unhealthy in my cluster?"
 ```
 
+> **You're now in an interactive console.** After Holmes answers your first
+> `holmes ask` question, it drops you into an interactive prompt where you can keep
+> asking follow-up questions directly — you do **not** need to type `holmes ask`
+> again. Just type your question and press Enter. The remaining examples in this lab
+> still show the full `holmes ask "..."` form for clarity, but inside the interactive
+> session you can simply type the part in quotes. Type `exit` (or press `Ctrl+D`) to
+> leave the console.
+
 Check exposed services:
 ```bash
 holmes ask "what services does my cluster expose externally?"
