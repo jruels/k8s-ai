@@ -54,21 +54,36 @@ Verify installation:
 botkube version
 ```
 
-### Part 2: Configure Slack Tokens
+### Part 2: Create the Slack App and Configure Tokens
 
-1. Get the Bot Token:
+Botkube connects to Slack in **Socket Mode**, which needs a Slack app that provides two
+tokens. If you do not already have them, create the app first:
+
+1. Go to the [Slack API Apps page](https://api.slack.com/apps) and click **Create New App
+   → From an app manifest**, then choose your workspace. Follow the official Botkube guide,
+   which contains the exact app manifest to paste:
+   **<https://docs.botkube.io/installation/slack/>**.
+2. After creating the app, **Install** it to your workspace.
+3. From **OAuth & Permissions**, copy the **Bot User OAuth Token** (starts with `xoxb-`).
+4. From **Basic Information → App-Level Tokens**, create a token with the
+   `connections:write` scope and copy it (starts with `xapp-`).
+
+Now export the two tokens in your terminal (paste your real values):
+
+1. Bot Token:
    ```bash
    export SLACK_API_BOT_TOKEN="xoxb-your-token"
    ```
 
-2. Get the App-Level Token:
+2. App-Level Token:
    ```bash
    export SLACK_API_APP_TOKEN="xapp-your-token"
    ```
 
-3. Add Botkube to your Slack channel by inviting `@Botkube`
+3. Create a channel for Botkube in Slack and invite the bot by typing `@Botkube` in it.
+   Note the channel name — you will pass it as `SLACK_CHANNEL_NAME` below.
 
-### Part 4: Deploy Botkube to Cluster
+### Part 3: Deploy Botkube to Cluster
 
 Install Botkube with Slack integration:
 ```bash
@@ -85,7 +100,7 @@ botkube install --version v1.14.0 \
 --set 'executors.k8s-default-tools.botkube/kubectl.enabled'=${ALLOW_KUBECTL}
 ```
 
-### Part 5: Test Botkube
+### Part 4: Test Botkube
 
 In your Slack channel, explore Botkube's capabilities:
 
@@ -120,7 +135,7 @@ This will open an interactive menu where you can:
 
 > **Note**: The interactive composer makes it easy to build and execute kubectl commands without remembering the exact syntax.
 
-### Part 6: Adding Helm Plugin
+### Part 5: Adding Helm Plugin
 
 Upgrade your Botkube installation to include Helm support:
 ```bash
@@ -152,7 +167,7 @@ Test Helm integration within slack with these read-only commands:
 
 > **Note**: The `--wait` flag is not supported by the Botkube Helm plugin. Also, when using flags, ensure there's a space between the flag and its value (use `-o yaml` instead of `-oyaml`).
 
-### Part 7: Cleanup
+### Part 6: Cleanup
 
 Remove Botkube from Slack:
 1. Go to [Slack Apps page](https://api.slack.com/apps)

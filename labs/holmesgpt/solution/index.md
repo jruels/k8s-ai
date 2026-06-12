@@ -177,7 +177,7 @@ holmes ask "what services does my cluster expose externally?"
 
 Investigate specific resources:
 ```bash
-holmes ask "why is my resource-heavy-pod pending?"
+holmes ask "why is my resource-issues-pod pending?"
 ```
 
 ##### **Advanced Usage Examples**
@@ -675,7 +675,7 @@ spec:
 EOF
 ```
 
-#### Create Custom Runbooks
+#### Investigate Alerts with HolmesGPT
 
 First, set up port forwarding for AlertManager:
 ```bash
@@ -700,143 +700,77 @@ the built-in `Watchdog` heartbeat. Workload alerts such as `KubePodCrashLooping`
 `kubectl create deployment bad-image --image=nginx:nonexistent`) and wait, to see more
 alerts to investigate.
 
-You'll see several issues like "KubePodCrashLooping", "KubeDeploymentRolloutStuck", etc. Let's create a runbook for a couple of these:
+So on a fresh cluster Holmes simply confirms the `Watchdog` alert is healthy. The
+`bad-image` deployment you created earlier will eventually trip a workload alert once its
+`for:` timer elapses, at which point `holmes investigate` will pick it up too.
+
+#### Focus and deepen an investigation
+
+You don't have to investigate every firing alert at once. These flags let you target and
+expand an investigation:
 
 ```bash
-# Create an initial runbook with a few alerts
-cat <<EOF > custom_runbooks.yaml
-runbooks:
-  - match:
-      issue_name: "KubePodCrashLooping"
-    instructions: >
-      Check pod status and events
-      Check pod logs for error messages
-      Check previous pod logs if available
-      Report any resource constraints or configuration issues
-
-  - match:
-      issue_name: "KubeDeploymentRolloutStuck"
-    instructions: >
-      Check deployment rollout status
-      Check pod events for scheduling issues
-      Verify image pull status
-      Check for resource constraints
-EOF
+# Investigate only one named alert (regex is supported for the name)
+holmes investigate alertmanager --alertmanager-url http://localhost:9093 \
+  --alertmanager-alertname Watchdog
 ```
-
-Then run Holmes with your runbook:
-```bash
-holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml
-```
-
-Notice how Holmes now follows your instructions for these specific alerts. For other alerts, it will use its default behavior.
-
-You can gradually add more alerts to your runbook as you identify common issues. For example, if you see "KubePodNotReady" alerts, you might add:
 
 ```bash
-cat <<EOF >> custom_runbooks.yaml
-  - match:
-      issue_name: "KubePodNotReady"
-    instructions: >
-      Check pod status and events
-      Verify resource requests and limits
-      Check node capacity and allocatable resources
-      Report any scheduling or resource issues
-EOF
+# Increase verbosity to watch every tool call Holmes makes (-v, -vv, or -vvv)
+holmes investigate alertmanager --alertmanager-url http://localhost:9093 -vv
 ```
 
-Tips for writing runbooks:
-1. Use `holmes investigate alertmanager` without a runbook first to see what issues exist
-2. Note the `issue_name` values from the alerts
-3. Create runbook entries matching those names
-4. Add investigation steps that you'd normally take for each issue
-5. Test and refine your instructions based on results
+#### Guiding an investigation with your own instructions (runbooks)
 
-A complete runbook might look like this:
+A *runbook* is simply a codified set of steps you'd normally take by hand to investigate a
+known problem. With the CLI you give Holmes a runbook by writing those steps, in plain
+English, directly into your question to `holmes ask`. Give Holmes an explicit, numbered
+procedure for the broken workload you deployed earlier:
+
 ```bash
-cat <<EOF > custom_runbooks.yaml
-runbooks:
-  - match:
-      issue_name: "KubePodCrashLooping"
-    instructions: >
-      Check pod status and events
-      Check pod logs for error messages
-      Check previous pod logs if available
-      Report any resource constraints or configuration issues
-
-  - match:
-      issue_name: "KubeDeploymentRolloutStuck"
-    instructions: >
-      Check deployment rollout status
-      Check pod events for scheduling issues
-      Verify image pull status
-      Check for resource constraints
-
-  - match:
-      issue_name: "KubePodNotReady"
-    instructions: >
-      Check pod status and events
-      Verify resource requests and limits
-      Check node capacity and allocatable resources
-      Report any scheduling or resource issues
-EOF
+holmes ask "Investigate the bad-image deployment by following these steps:
+1. Check the pod status and recent events
+2. Read the pod logs and any previous logs
+3. Determine whether this is an image, resource, or configuration problem
+4. Report the root cause and the smallest change that would fix it"
 ```
+
+Notice that Holmes follows your numbered steps in order — exactly the way it would follow a
+runbook. Save prompts like this in a text file and reuse them as your team's standard
+procedures for the alerts you see most often.
+
+Tips for writing investigation instructions:
+1. Run `holmes investigate alertmanager` (or `holmes ask`) **without** guidance first to see
+   what Holmes finds on its own.
+2. Note the recurring alerts and failure patterns in your cluster.
+3. Write down the exact steps you'd take by hand for each one.
+4. Feed those steps to Holmes as a numbered procedure, then refine them based on the results.
 
 ### Challenge Tasks
 
-1. Add more alert types to your runbooks
-```bash
-   # Example of adding more alert types
-   cat <<EOF >> custom_runbooks.yaml
-runbooks:
-   - match:
-       issue_name: "KubeSchedulerDown"
-     instructions: >
-       Check if the cluster is a managed cluster like EKS by fetching nodes and looking at their labels
-       If so, tell the user this is likely a known false positive in the kube-prometheus-stack alert
-       If not, check scheduler status and logs
-EOF
-```
-
-2. Customize investigation depth
+1. **Target a specific alert.** Once a workload alert is firing, scope the investigation to
+   just that alert by name (the value accepts a regex):
    ```bash
-   # Test with different verbosity levels
-   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml -vv
-   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml -vvv
-
-   # Test focused investigation
-   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -r custom_runbooks.yaml --alertmanager-alertname KubePodCrashLooping
+   holmes investigate alertmanager --alertmanager-url http://localhost:9093 \
+     --alertmanager-alertname KubePodCrashLooping
    ```
 
-3. Create a runbook for a complex scenario
-```bash
-   cat <<EOF > custom_runbooks.yaml
-runbooks:
-  - match:
-      issue_name: "KubePodNotReady"
-    instructions: >
-      # First check deployment status
-      Check deployment status and events
-      Check pod status for this deployment
-      
-      # If pods are running but not ready
-      If pods are running:
-        Check readiness probe status
-        Check liveness probe status
-        Verify service connectivity
-      
-      # If pods are not running
-      If pods are not running:
-        Check node resources
-        Check image pull status
-        Verify PVC status if applicable
-        
-      # Report findings
-      Summarize all discovered issues
-      Prioritize critical problems
-      Suggest remediation steps
-EOF
-```
+2. **Customize investigation depth.** Re-run an investigation at different verbosity levels
+   and compare how much of the tool-calling you can see:
+   ```bash
+   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -vv
+   holmes investigate alertmanager --alertmanager-url http://localhost:9093 -vvv
+   ```
+
+3. **Write a complex, branching procedure.** Ask Holmes to follow a conditional workflow,
+   the kind a real runbook encodes:
+   ```bash
+   holmes ask "Investigate any not-ready pods in the default namespace using this workflow:
+   - First check the owning deployment's status and events.
+   - If the pods are running but not ready: check the readiness and liveness probes and verify service connectivity.
+   - If the pods are not running: check node resources, image pull status, and any PVCs.
+   - Finally, summarize all issues found, prioritize the critical ones, and suggest remediation steps."
+   ```
 
 ### Lab Completion
 
